@@ -1,10 +1,12 @@
 import { createStorage, StorageEnum } from '../base/index.js';
+import { DEFAULT_AI_SETTINGS, type ProviderType } from '../const.js';
 import type { BaseStorageType } from '../types.js';
 
 interface AISettingsType {
   apiKey: string;
-  baseUrl: string;
+  baseUrl?: string | undefined;
   modelName: string;
+  provider: ProviderType;
 }
 
 type AISettingsStorageType = BaseStorageType<AISettingsType>;
@@ -12,9 +14,7 @@ type AISettingsStorageType = BaseStorageType<AISettingsType>;
 const storage = createStorage<AISettingsType>(
   'ai-settings-storage-key',
   {
-    apiKey: '',
-    baseUrl: 'https://api.openai.com/v1',
-    modelName: 'gpt-3.5-turbo',
+    ...DEFAULT_AI_SETTINGS,
   },
   {
     storageEnum: StorageEnum.Local,

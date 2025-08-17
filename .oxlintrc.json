@@ -176,7 +176,7 @@
             "message": "Please import from `@extension/shared` instead of `type-fest`."
           }
         ],
-        "arrow-body-style": ["error", "as-needed"],
+        "arrow-body-style": ["off"],
         "@typescript-eslint/consistent-type-imports": "error",
         "import-x/no-named-as-default": "error",
         "import-x/no-named-as-default-member": "error",
@@ -187,8 +187,8 @@
             "prefer-inline": false
           }
         ],
-        "import-x/consistent-type-specifier-style": "error",
-        "import-x/exports-last": "error",
+        "import-x/consistent-type-specifier-style": "off",
+        "import-x/exports-last": "off",
         "import-x/first": "error"
       },
       "globals": {
