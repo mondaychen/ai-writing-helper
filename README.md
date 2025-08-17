@@ -178,8 +178,6 @@ Code that is transpiled to be part of the extension lives in the [pages](pages) 
   (`devtools_page` in manifest.json)
 - [`devtools-panel`](pages/devtools-panel/) - [DevTools panel](https://developer.chrome.com/docs/extensions/reference/api/devtools/panels)
   for [devtools](pages/devtools/src/index.ts)
-- [`new-tab`](pages/new-tab/) - [override the default New Tab page](https://developer.chrome.com/docs/extensions/develop/ui/override-chrome-pages)
-  (`chrome_url_overrides.newtab` in manifest.json)
 - [`options`](pages/options/) - [options page](https://developer.chrome.com/docs/extensions/develop/ui/options-page)
   (`options_page` in manifest.json)
 - [`popup`](pages/popup/) - [popup](https://developer.chrome.com/docs/extensions/reference/api/action#popup) shown when
