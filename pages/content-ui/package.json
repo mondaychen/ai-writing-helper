@@ -15,7 +15,7 @@
     "clean": "pnpm clean:bundle && pnpm clean:node_modules && pnpm clean:turbo",
     "build": "tsx build.mts",
     "dev": "tsx build.mts",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "lint:fix": "pnpm lint --fix",
     "format": "prettier . --write --ignore-path ../../.prettierignore",
     "type-check": "tsc --noEmit"

@@ -1,5 +1,5 @@
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* oxlint-disable jsx-a11y/click-events-have-key-events */
+/* oxlint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
 import { useStorage } from '@extension/shared';
 import { keyboardShortcutStorage, aiSettingsStorage } from '@extension/storage';

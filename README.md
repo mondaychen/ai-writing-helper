@@ -67,7 +67,6 @@ the build speed and development experience by using Vite and Turborepo.
 - [Vite](https://vitejs.dev/) with [Rollup](https://rollupjs.org/)
 - [Turborepo](https://turbo.build/repo)
 - [Prettier](https://prettier.io/)
-- [ESLint](https://eslint.org/)
 - [Chrome Extensions Manifest Version 3](https://developer.chrome.com/docs/extensions/mv3/intro/)
 - [Custom i18n package](/packages/i18n/)
 - [Custom HMR (Hot Module Rebuild) plugin](/packages/hmr)
@@ -83,17 +82,11 @@ the build speed and development experience by using Vite and Turborepo.
 6. Run `pnpm install`
 7. Check if you have that configuration in your IDE/Editor:
     - <b>VS Code</b>:
-        - Installed [ESLint extension](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
         - Installed [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
         - Enabled `Typescript Workbench version` in settings:
             - CTRL + SHIFT + P -> Search: `Typescript: Select Typescript version...` -> `Use Workbench version`
             - [Read more](https://code.visualstudio.com/docs/languages/typescript#_using-newer-typescript-versions)
         - Optional, for imports to work correctly in WSL, you might need to install the [Remote - WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) extension and connect to WSL remotely from VS Code. See overview section in the extension page for more information.
-    - <b>WebStorm</b>:
-      - Configured [ESLint](https://www.jetbrains.com/help/webstorm/eslint.html#ws_eslint_configure_run_eslint_on_save)
-      - Configured [Prettier](https://prettier.io/docs/en/webstorm.html)
-      - Optional, but useful `File | Settings | Tools | Actions on Save`\
-      -> `Optimize imports` and `Reformat code`
 8. Run `pnpm update-version <version>` for change the `version` to the desired version of your extension.
 
 > [!IMPORTANT]
