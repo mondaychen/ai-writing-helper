@@ -1,16 +1,12 @@
 import { createStorage, StorageEnum } from '../base/index.js';
+import type { BaseStorageType } from '../types.js';
 
 interface KeyboardShortcutType {
   modifiers: string[];
   key: string;
 }
 
-interface KeyboardShortcutStorageType {
-  get: () => Promise<KeyboardShortcutType>;
-  set: (value: KeyboardShortcutType | ((prev: KeyboardShortcutType) => KeyboardShortcutType)) => Promise<void>;
-  getSnapshot: () => KeyboardShortcutType | null;
-  subscribe: (listener: () => void) => () => void;
-}
+type KeyboardShortcutStorageType = BaseStorageType<KeyboardShortcutType>;
 
 const storage = createStorage<KeyboardShortcutType>(
   'keyboard-shortcut-storage-key',

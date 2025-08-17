@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
+import { useStorage } from '@extension/shared';
 import { keyboardShortcutStorage, aiSettingsStorage } from '@extension/storage';
 import { useEffect, useState, useRef } from 'react';
 
@@ -14,48 +15,42 @@ export default function App() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
+  // Use the storage hook to read data reactively
+  const shortcutSettings = useStorage(keyboardShortcutStorage);
+  const aiSettings = useStorage(aiSettingsStorage);
+
   useEffect(() => {
     console.log('[CEB] Content ui all loaded');
 
-    const setupKeyboardListener = async () => {
-      const shortcutSettings = await keyboardShortcutStorage.get();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMatch =
+        shortcutSettings.modifiers.every((modifier: string) => {
+          switch (modifier) {
+            case 'ctrlKey':
+              return e.ctrlKey;
+            case 'shiftKey':
+              return e.shiftKey;
+            case 'altKey':
+              return e.altKey;
+            case 'metaKey':
+              return e.metaKey;
+            default:
+              return false;
+          }
+        }) && e.key.toUpperCase() === shortcutSettings.key.toUpperCase();
 
-      const handleKeyDown = (e: KeyboardEvent) => {
-        const isMatch =
-          shortcutSettings.modifiers.every((modifier: string) => {
-            switch (modifier) {
-              case 'ctrlKey':
-                return e.ctrlKey;
-              case 'shiftKey':
-                return e.shiftKey;
-              case 'altKey':
-                return e.altKey;
-              case 'metaKey':
-                return e.metaKey;
-              default:
-                return false;
-            }
-          }) && e.key.toUpperCase() === shortcutSettings.key.toUpperCase();
-
-        if (isMatch) {
-          e.preventDefault();
-          openEditor();
-        }
-      };
-
-      document.addEventListener('keydown', handleKeyDown);
-
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
+      if (isMatch) {
+        e.preventDefault();
+        openEditor();
+      }
     };
 
-    const cleanup = setupKeyboardListener();
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      cleanup.then(cleanupFn => cleanupFn?.());
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [shortcutSettings]);
 
   const openEditor = () => {
     const focusedElement = document.activeElement as HTMLElement;
@@ -114,22 +109,20 @@ export default function App() {
 
     setIsRewriting(true);
     try {
-      const settings = await aiSettingsStorage.get();
-
-      if (!settings.apiKey) {
+      if (!aiSettings.apiKey) {
         alert('Please configure your API key in the extension options first.');
         setIsRewriting(false);
         return;
       }
 
-      const response = await fetch(`${settings.baseUrl}/chat/completions`, {
+      const response = await fetch(`${aiSettings.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${settings.apiKey}`,
+          Authorization: `Bearer ${aiSettings.apiKey}`,
         },
         body: JSON.stringify({
-          model: settings.modelName,
+          model: aiSettings.modelName,
           messages: [
             {
               role: 'system',

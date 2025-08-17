@@ -1,4 +1,5 @@
 import { createStorage, StorageEnum } from '../base/index.js';
+import type { BaseStorageType } from '../types.js';
 
 interface AISettingsType {
   apiKey: string;
@@ -6,12 +7,7 @@ interface AISettingsType {
   modelName: string;
 }
 
-interface AISettingsStorageType {
-  get: () => Promise<AISettingsType>;
-  set: (value: AISettingsType | ((prev: AISettingsType) => AISettingsType)) => Promise<void>;
-  getSnapshot: () => AISettingsType | null;
-  subscribe: (listener: () => void) => () => void;
-}
+type AISettingsStorageType = BaseStorageType<AISettingsType>;
 
 const storage = createStorage<AISettingsType>(
   'ai-settings-storage-key',
