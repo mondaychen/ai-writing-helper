@@ -7,6 +7,7 @@ interface AISettingsType {
   baseUrl?: string | undefined;
   modelName: string;
   provider: ProviderType;
+  defaultPrompt?: string;
 }
 
 type AISettingsStorageType = BaseStorageType<AISettingsType>;

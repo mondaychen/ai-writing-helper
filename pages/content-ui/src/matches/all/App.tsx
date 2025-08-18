@@ -1,26 +1,61 @@
 /* oxlint-disable jsx-a11y/click-events-have-key-events */
 /* oxlint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
-import { useStorage, useAiInstance } from '@extension/shared';
-import { keyboardShortcutStorage, aiSettingsStorage } from '@extension/storage';
-import { useEffect, useState, useRef } from 'react';
-
-import { rewriteContent as rewriteContentImpl } from './rewriteContent';
+import { useStorage } from '@extension/shared';
+import { keyboardShortcutStorage, uiModeStorage, UI_MODE } from '@extension/storage';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { EditorUI } from '@extension/ui/app/EditorUI';
 
 export default function App() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editorContent, setEditorContent] = useState('');
-  const [originalContent, setOriginalContent] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [isRewriting, setIsRewriting] = useState(false);
+  const [currentContent, setCurrentContent] = useState('');
   const focusedElementRef = useRef<HTMLElement | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Use the storage hook to read data reactively
   const shortcutSettings = useStorage(keyboardShortcutStorage);
-  const aiSettings = useStorage(aiSettingsStorage);
-  const aiInstance = useAiInstance(aiSettings.provider, aiSettings.baseUrl, aiSettings.apiKey);
+  const uiModeSettings = useStorage(uiModeStorage);
+
+  const handleApply = useCallback((content: string) => {
+    if (focusedElementRef.current) {
+      if (focusedElementRef.current.tagName === 'TEXTAREA' || focusedElementRef.current.tagName === 'INPUT') {
+        (focusedElementRef.current as HTMLInputElement | HTMLTextAreaElement).value = content;
+        focusedElementRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (focusedElementRef.current.isContentEditable) {
+        focusedElementRef.current.textContent = content;
+        focusedElementRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }, []);
+
+  const openEditor = useCallback(() => {
+    const focusedElement = document.activeElement as HTMLElement;
+
+    if (
+      focusedElement &&
+      (focusedElement.tagName === 'TEXTAREA' || focusedElement.tagName === 'INPUT' || focusedElement.isContentEditable)
+    ) {
+      focusedElementRef.current = focusedElement;
+
+      const content =
+        focusedElement.tagName === 'TEXTAREA' || focusedElement.tagName === 'INPUT'
+          ? (focusedElement as HTMLInputElement | HTMLTextAreaElement).value
+          : focusedElement.textContent || '';
+
+      setCurrentContent(content);
+
+      if (uiModeSettings.mode === UI_MODE.SIDE_PANEL) {
+        chrome.runtime.sendMessage({
+          type: 'OPEN_SIDE_PANEL_EDITOR',
+          content: content,
+        });
+      } else {
+        setIsDialogOpen(true);
+      }
+    } else if (uiModeSettings.mode === UI_MODE.DIALOG) {
+      setIsDialogOpen(true);
+    }
+  }, [uiModeSettings.mode]);
 
   useEffect(() => {
     console.log('[CEB] Content ui all loaded');
@@ -49,78 +84,26 @@ export default function App() {
       }
     };
 
+    const handleMessage = (message: unknown) => {
+      if (typeof message === 'object' && message !== null && 'type' in message && 'content' in message) {
+        const msg = message as { type: string; content: string };
+        if (msg.type === 'APPLY_CONTENT' && msg.content && focusedElementRef.current) {
+          handleApply(msg.content);
+        }
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
+    chrome.runtime.onMessage.addListener(handleMessage);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      chrome.runtime.onMessage.removeListener(handleMessage);
     };
-  }, [shortcutSettings]);
-
-  const openEditor = () => {
-    const focusedElement = document.activeElement as HTMLElement;
-
-    if (
-      focusedElement &&
-      (focusedElement.tagName === 'TEXTAREA' || focusedElement.tagName === 'INPUT' || focusedElement.isContentEditable)
-    ) {
-      focusedElementRef.current = focusedElement;
-
-      const content =
-        focusedElement.tagName === 'TEXTAREA' || focusedElement.tagName === 'INPUT'
-          ? (focusedElement as HTMLInputElement | HTMLTextAreaElement).value
-          : focusedElement.textContent || '';
-
-      setOriginalContent(content);
-      setEditorContent(content);
-    }
-    setIsDialogOpen(true);
-  };
-
-  const applyChanges = () => {
-    if (focusedElementRef.current) {
-      if (focusedElementRef.current.tagName === 'TEXTAREA' || focusedElementRef.current.tagName === 'INPUT') {
-        (focusedElementRef.current as HTMLInputElement | HTMLTextAreaElement).value = editorContent;
-        focusedElementRef.current.dispatchEvent(new Event('input', { bubbles: true }));
-      } else if (focusedElementRef.current.isContentEditable) {
-        focusedElementRef.current.textContent = editorContent;
-        focusedElementRef.current.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }
-    setIsDialogOpen(false);
-  };
-
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(editorContent);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
-  };
-
-  const resetChanges = () => {
-    setEditorContent(originalContent);
-  };
+  }, [shortcutSettings, handleApply, openEditor]);
 
   const closeDialog = () => {
     setIsDialogOpen(false);
-  };
-
-  const rewriteContent = async () => {
-    if (!prompt.trim() || !editorContent.trim()) {
-      alert('Please enter both content and a prompt for rewriting.');
-      return;
-    }
-
-    setIsRewriting(true);
-    try {
-      const rewrittenContent = await rewriteContentImpl(aiInstance, editorContent, prompt);
-      setEditorContent(rewrittenContent);
-    } catch (error) {
-      console.error('Error rewriting content:', error);
-      alert(`Error rewriting content:\n${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsRewriting(false);
-    }
   };
 
   useEffect(() => {
@@ -141,64 +124,13 @@ export default function App() {
             closeDialog();
           }
         }}>
-        <div className="flex h-full flex-col gap-4 rounded-lg border bg-white px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-gray-900">AI Writing Helper</h2>
-            <button
-              onClick={closeDialog}
-              className="cursor-pointer border-0 bg-transparent p-1 text-3xl font-bold text-gray-500">
-              ×
-            </button>
-          </div>
-
-          <div className="flex flex-1 gap-4">
-            <div className="flex flex-1 flex-col gap-2">
-              <label htmlFor="content-textarea" className="text-sm font-medium text-gray-700">
-                Content
-              </label>
-              <textarea
-                id="content-textarea"
-                ref={textareaRef}
-                value={editorContent}
-                onChange={e => setEditorContent(e.target.value)}
-                className="h-full w-full resize-none rounded border p-2 text-sm focus:outline-none focus:ring-2"
-                placeholder="Your content will appear here..."
-              />
-            </div>
-            <div className="flex w-80 flex-col gap-2">
-              <label htmlFor="prompt-textarea" className="text-sm font-medium text-gray-700">
-                AI Prompt
-              </label>
-              <textarea
-                id="prompt-textarea"
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                className="h-32 w-full resize-none rounded border p-2 text-sm focus:outline-none focus:ring-2"
-                placeholder="Enter instructions for AI (e.g., 'Fix grammar', 'Make more professional', 'Summarize')"
-              />
-              <button
-                onClick={rewriteContent}
-                disabled={isRewriting || !prompt.trim() || !editorContent.trim()}
-                className="cursor-pointer rounded bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-400">
-                {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button onClick={resetChanges} className="cursor-pointer rounded border bg-white px-4 py-2 text-gray-600">
-              Reset
-            </button>
-            <button
-              onClick={copyToClipboard}
-              className="cursor-pointer rounded border bg-white px-4 py-2 text-blue-500">
-              Copy
-            </button>
-            <button onClick={applyChanges} className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white">
-              Apply
-            </button>
-          </div>
-        </div>
+        <EditorUI
+          isOpen={isDialogOpen}
+          onClose={closeDialog}
+          initialContent={currentContent}
+          onApply={handleApply}
+          className="rounded-lg border bg-white px-6 py-4"
+        />
       </dialog>
     </>
   );

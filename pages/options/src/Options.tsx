@@ -5,7 +5,13 @@ import type { z } from 'zod';
 // import { t } from '@extension/i18n';
 import { toast } from 'sonner';
 import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import { exampleThemeStorage, aiSettingsStorage, keyboardShortcutStorage } from '@extension/storage';
+import {
+  exampleThemeStorage,
+  aiSettingsStorage,
+  keyboardShortcutStorage,
+  uiModeStorage,
+  UI_MODE,
+} from '@extension/storage';
 import type { KeyboardShortcutType } from '@extension/storage';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
 import { Button } from '@/lib/components/ui/button';
@@ -14,12 +20,14 @@ import { Input } from '@/lib/components/ui/input';
 import { Toaster } from '@/lib/components/ui/sonner';
 import { Label } from '@/lib/components/ui/label';
 import { Switch } from '@/lib/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
 import { AISetting, type formSchema } from './AISetting';
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
   const aiSettings = useStorage(aiSettingsStorage);
   const shortcutSettings = useStorage(keyboardShortcutStorage);
+  const uiModeSettings = useStorage(uiModeStorage);
 
   const [shortcutData, setShortcutData] = useState({
     modifiers: ['ctrlKey', 'shiftKey'],
@@ -44,6 +52,11 @@ const Options = () => {
   const handleSaveShortcut = async () => {
     await keyboardShortcutStorage.set(shortcutData);
     toast.success('Keyboard shortcut saved successfully!');
+  };
+
+  const handleUIModeChange = async (mode: string) => {
+    await uiModeStorage.set({ mode: mode as typeof UI_MODE.DIALOG | typeof UI_MODE.SIDE_PANEL });
+    toast.success('UI mode saved successfully!');
   };
 
   const handleModifierChange = (modifier: string, checked: boolean) => {
@@ -123,6 +136,37 @@ const Options = () => {
                 + {shortcutData.key}
               </div>
               <Button onClick={handleSaveShortcut}>Save Shortcut</Button>
+            </div>
+          </section>
+
+          {/* UI Mode Section */}
+          <section className={cn('rounded-lg p-6', isLight ? 'bg-white shadow-md' : 'bg-gray-950')}>
+            <h2 className="mb-4 text-xl font-semibold">Editor Interface</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="ui-mode-select" className="mb-2 block text-sm font-medium">
+                  Editor Display Mode
+                </Label>
+                <Select value={uiModeSettings.mode} onValueChange={handleUIModeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select display mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UI_MODE.DIALOG}>Modal Dialog (overlay on page)</SelectItem>
+                    <SelectItem value={UI_MODE.SIDE_PANEL}>Side Panel (Chrome extension panel)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
+                <strong>Current mode: </strong>
+                {uiModeSettings.mode === UI_MODE.DIALOG ? 'Modal Dialog' : 'Side Panel'}
+                <br />
+                <span className="text-xs opacity-75">
+                  {uiModeSettings.mode === UI_MODE.DIALOG
+                    ? 'Editor appears as an overlay on the current page'
+                    : "Editor appears in Chrome's side panel (requires Chrome 114+)"}
+                </span>
+              </div>
             </div>
           </section>
 

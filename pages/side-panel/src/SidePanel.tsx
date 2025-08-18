@@ -1,27 +1,48 @@
 import '@src/SidePanel.css';
-import { t } from '@extension/i18n';
-import { PROJECT_URL_OBJECT, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
+import { useState, useEffect } from 'react';
+import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
-import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from '@extension/ui';
+import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
+import { EditorUI } from '@extension/ui/app/EditorUI';
 
 const SidePanel = () => {
   const { isLight } = useStorage(exampleThemeStorage);
-  const logo = isLight ? 'side-panel/logo_vertical.svg' : 'side-panel/logo_vertical_dark.svg';
+  const [currentContent, setCurrentContent] = useState('');
 
-  const goGithubSite = () => chrome.tabs.create(PROJECT_URL_OBJECT);
+  useEffect(() => {
+    const handleMessage = (message: unknown) => {
+      if (typeof message === 'object' && message !== null && 'type' in message && 'content' in message) {
+        const msg = message as { type: string; content: string };
+        if (msg.type === 'OPEN_SIDE_PANEL_EDITOR' && msg.content) {
+          setCurrentContent(msg.content);
+        }
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, []);
+
+  const handleApply = async (content: string) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'APPLY_CONTENT',
+          content: content,
+        });
+      }
+    });
+  };
 
   return (
-    <div className={cn('App', isLight ? 'bg-slate-50' : 'bg-gray-800')}>
-      <header className={cn('App-header', isLight ? 'text-gray-900' : 'text-gray-100')}>
-        <button onClick={goGithubSite}>
-          <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
-        </button>
-        <p>
-          Edit <code>pages/side-panel/src/SidePanel.tsx</code>
-        </p>
-        <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
-      </header>
-    </div>
+    <EditorUI
+      isOpen={true}
+      onClose={() => {}}
+      initialContent={currentContent}
+      onApply={handleApply}
+      className={cn('flex-1 p-4', isLight ? 'text-gray-900' : 'text-gray-100')}
+      showCloseButton={false}
+    />
   );
 };
 

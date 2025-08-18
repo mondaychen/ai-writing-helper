@@ -10,6 +10,7 @@ export const DEFAULT_AI_SETTINGS = {
   baseUrl: undefined,
   modelName: 'gpt-4o-mini',
   provider: AI_PROVIDER.OPENAI,
+  defaultPrompt: '',
 } as const;
 
 export const RECOMMENDED_MODEL_BY_PROVIDER = {
