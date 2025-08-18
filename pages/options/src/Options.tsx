@@ -80,13 +80,13 @@ const Options = () => {
             <div className="space-y-4">
               <fieldset>
                 <legend className="mb-2 block text-sm font-medium">Modifiers</legend>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-4">
                   {['ctrlKey', 'shiftKey', 'altKey', 'metaKey'].map(modifier => (
                     <label key={modifier} className="flex items-center">
                       <Checkbox
                         checked={shortcutData.modifiers.includes(modifier)}
                         onCheckedChange={checked => handleModifierChange(modifier, checked as boolean)}
-                        className="mr-2"
+                        className="mr-1"
                       />
                       <span className="text-sm">
                         {modifier === 'ctrlKey' && 'Ctrl'}
