@@ -23,6 +23,7 @@ export const EditorUI = ({
 }: EditorUIProps) => {
   const [editorContent, setEditorContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
+  const [reason, setReason] = useState('');
   const [prompt, setPrompt] = useState('');
   const [isRewriting, setIsRewriting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -69,7 +70,8 @@ export const EditorUI = ({
     setIsRewriting(true);
     try {
       const rewrittenContent = await rewriteContentImpl(aiInstance, editorContent, prompt);
-      setEditorContent(rewrittenContent);
+      setEditorContent(rewrittenContent.rewrittenContent);
+      setReason(rewrittenContent.reason);
     } catch (error) {
       console.error('Error rewriting content:', error);
       alert(`Error rewriting content:\n${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -121,10 +123,11 @@ export const EditorUI = ({
           <button
             onClick={rewriteContent}
             disabled={isRewriting || !prompt.trim() || !editorContent.trim()}
-            className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-gray-400">
+            className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400">
             {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
           </button>
         </div>
+        <div className="text-sm text-gray-700">{reason}</div>
       </div>
 
       <div className="flex justify-end gap-2">

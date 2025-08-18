@@ -25,7 +25,11 @@ const promptMaker = (editorContent: string, prompt: string) => {
 </xml>`;
 };
 
-export const rewriteContent = async (provider: ProviderV2, editorContent: string, prompt: string): Promise<string> => {
+export const rewriteContent = async (
+  provider: ProviderV2,
+  editorContent: string,
+  prompt: string,
+): Promise<z.infer<typeof schema>> => {
   const response = await generateObject({
     model: provider.languageModel('gpt-4o'),
     schema,
@@ -44,7 +48,10 @@ export const rewriteContent = async (provider: ProviderV2, editorContent: string
   const rewrittenText = response.object.rewrittenContent;
 
   if (rewrittenText) {
-    return rewrittenText;
+    return {
+      reason: response.object.reason,
+      rewrittenContent: rewrittenText,
+    };
   } else {
     throw new Error('No content received from API');
   }
