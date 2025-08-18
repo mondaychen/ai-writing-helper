@@ -8,6 +8,7 @@ export default withPageConfig({
   resolve: {
     alias: {
       '@src': srcDir,
+      '@': resolve(rootDir, '..', '..', 'packages', 'ui'),
     },
   },
   publicDir: resolve(rootDir, 'public'),
