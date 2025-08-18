@@ -14,7 +14,7 @@ chrome.runtime.onMessage.addListener((message, sender, _sendResponse) => {
       chrome.runtime.sendMessage({
         type: 'OPEN_SIDE_PANEL_EDITOR',
         content: message.content,
-        isContentEditable: message.isContentEditable,
+        isContentAppliable: message.isContentAppliable,
       });
     }
   }

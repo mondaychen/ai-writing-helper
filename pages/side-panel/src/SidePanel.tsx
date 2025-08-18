@@ -8,15 +8,15 @@ import { EditorUI } from '@extension/ui/app/EditorUI';
 const SidePanel = () => {
   const { isLight } = useStorage(exampleThemeStorage);
   const [currentContent, setCurrentContent] = useState('');
-  const [isContentEditable, setIsContentEditable] = useState(false);
+  const [isContentAppliable, setIsContentAppliable] = useState(false);
 
   useEffect(() => {
     const handleMessage = (message: unknown) => {
       if (typeof message === 'object' && message !== null && 'type' in message && 'content' in message) {
-        const msg = message as { type: string; content: string; isContentEditable?: boolean };
+        const msg = message as { type: string; content: string; isContentAppliable?: boolean };
         if (msg.type === 'OPEN_SIDE_PANEL_EDITOR' && msg.content) {
           setCurrentContent(msg.content);
-          setIsContentEditable(msg.isContentEditable || false);
+          setIsContentAppliable(msg.isContentAppliable || false);
         }
       }
     };
@@ -44,7 +44,7 @@ const SidePanel = () => {
       onApply={handleApply}
       className={cn('flex-1 p-4', isLight ? 'text-gray-900' : 'text-gray-100')}
       showCloseButton={false}
-      isContentEditable={isContentEditable}
+      isContentAppliable={isContentAppliable}
     />
   );
 };

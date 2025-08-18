@@ -9,7 +9,7 @@ import { EditorUI } from '@extension/ui/app/EditorUI';
 export default function App() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentContent, setCurrentContent] = useState('');
-  const [isContentEditable, setIsContentEditable] = useState(false);
+  const [isContentAppliable, setIsContentAppliable] = useState(false);
   const focusedElementRef = useRef<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -64,19 +64,29 @@ export default function App() {
           : focusedElement.innerText || '';
 
       setCurrentContent(content);
-      setIsContentEditable(focusedElement.isContentEditable);
+      // isContentAppliable is true when there is a focused element AND it's NOT contentEditable
+      setIsContentAppliable(!focusedElement.isContentEditable);
 
       if (uiModeSettings.mode === UI_MODE.SIDE_PANEL) {
         chrome.runtime.sendMessage({
           type: 'OPEN_SIDE_PANEL_EDITOR',
           content: content,
-          isContentEditable: focusedElement.isContentEditable,
+          isContentAppliable: !focusedElement.isContentEditable,
         });
       } else {
         setIsDialogOpen(true);
       }
-    } else if (uiModeSettings.mode === UI_MODE.DIALOG) {
-      setIsDialogOpen(true);
+    } else {
+      if (uiModeSettings.mode === UI_MODE.DIALOG) {
+        setIsContentAppliable(false);
+        setIsDialogOpen(true);
+      } else {
+        chrome.runtime.sendMessage({
+          type: 'OPEN_SIDE_PANEL_EDITOR',
+          content: '',
+          isContentAppliable: false,
+        });
+      }
     }
   }, [uiModeSettings.mode]);
 
@@ -155,7 +165,7 @@ export default function App() {
           initialContent={currentContent}
           onApply={handleApply}
           className="rounded-lg border bg-white px-6 py-4"
-          isContentEditable={isContentEditable}
+          isContentAppliable={isContentAppliable}
         />
       </dialog>
     </>

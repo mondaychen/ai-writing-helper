@@ -4,7 +4,6 @@ import { aiSettingsStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
 import { Textarea } from '@/lib/components/ui/textarea';
 import { Label } from '@/lib/components/ui/label';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/lib/components/ui/tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/lib/components/ui/card';
 import { X, Copy, RotateCcw, Check } from 'lucide-react';
 
@@ -17,7 +16,7 @@ interface EditorUIProps {
   onApply?: (content: string) => void;
   className?: string;
   showCloseButton?: boolean;
-  isContentEditable?: boolean;
+  isContentAppliable?: boolean;
 }
 
 export const EditorUI = ({
@@ -27,7 +26,7 @@ export const EditorUI = ({
   onApply,
   className = '',
   showCloseButton = true,
-  isContentEditable = false,
+  isContentAppliable = false,
 }: EditorUIProps) => {
   const [editorContent, setEditorContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
@@ -91,89 +90,73 @@ export const EditorUI = ({
   if (!isOpen) return null;
 
   return (
-    <TooltipProvider>
-      <div className={`flex h-full flex-col gap-4 ${className}`}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold text-gray-900">AI Writing Helper</h2>
-          {showCloseButton && (
-            <Button onClick={onClose} variant="ghost" size="icon" className="h-8 w-8">
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
-        <div className="flex flex-1 flex-col gap-4 md:flex-row">
-          <div className="flex flex-1 flex-col gap-2">
-            <Label htmlFor="content-textarea">Content</Label>
-            <Textarea
-              id="content-textarea"
-              ref={textareaRef}
-              value={editorContent}
-              onChange={e => setEditorContent(e.target.value)}
-              className="h-64 resize-none lg:h-full"
-              placeholder="Type your content here..."
-            />
-          </div>
-          <div className="flex w-full flex-col gap-2 md:w-80">
-            <Label htmlFor="prompt-textarea">AI Prompt</Label>
-            <Textarea
-              id="prompt-textarea"
-              value={prompt}
-              onChange={e => setPrompt(e.target.value)}
-              className="h-32 resize-none"
-              placeholder="Enter instructions for AI (e.g., 'Fix grammar', 'Make more professional', 'Summarize')"
-            />
-            <Button
-              onClick={rewriteContent}
-              disabled={isRewriting || !prompt.trim() || !editorContent.trim()}
-              className="w-full">
-              {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
-            </Button>
-          </div>
-          {reason && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">AI Response</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-700">{reason}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button onClick={resetChanges} variant="outline" size="sm">
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset
+    <div className={`flex h-full flex-col gap-4 ${className}`}>
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-gray-900">AI Writing Helper</h2>
+        {showCloseButton && (
+          <Button onClick={onClose} variant="ghost" size="icon" className="h-8 w-8">
+            <X className="h-4 w-4" />
           </Button>
-          <Button onClick={copyToClipboard} variant="outline" size="sm">
-            <Copy className="mr-2 h-4 w-4" />
-            Copy
-          </Button>
-          {!isContentEditable ? (
-            <Button onClick={applyChanges} disabled={isContentEditable} size="sm">
-              <Check className="mr-2 h-4 w-4" />
-              Apply
-            </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" className="cursor-not-allowed" size="sm">
-                  Apply
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[90vw]">
-                <p>
-                  Apply is disabled for rich text editors.
-                  <br />
-                  Use Copy button instead.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
+        )}
       </div>
-    </TooltipProvider>
+
+      <div className="flex flex-1 flex-col gap-4 md:flex-row">
+        <div className="flex flex-1 flex-col gap-2">
+          <Label htmlFor="content-textarea">Content</Label>
+          <Textarea
+            id="content-textarea"
+            ref={textareaRef}
+            value={editorContent}
+            onChange={e => setEditorContent(e.target.value)}
+            className="h-64 resize-none lg:h-full"
+            placeholder="Type your content here..."
+          />
+        </div>
+        <div className="flex w-full flex-col gap-2 md:w-80">
+          <Label htmlFor="prompt-textarea">AI Prompt</Label>
+          <Textarea
+            id="prompt-textarea"
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            className="h-32 resize-none"
+            placeholder="Enter instructions for AI (e.g., 'Fix grammar', 'Make more professional', 'Summarize')"
+          />
+          <Button
+            onClick={rewriteContent}
+            disabled={isRewriting || !prompt.trim() || !editorContent.trim()}
+            className="w-full">
+            {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
+          </Button>
+        </div>
+        {reason && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">AI Response</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-700">{reason}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      <div className="flex justify-end gap-2">
+        {isContentAppliable && (
+          <Button onClick={applyChanges} size="sm">
+            <Check className="mr-1 h-4 w-4" />
+            Apply
+          </Button>
+        )}
+
+        <Button onClick={copyToClipboard} variant="outline" size="sm">
+          <Copy className="mr-1 h-4 w-4" />
+          Copy
+        </Button>
+        <Button onClick={resetChanges} variant="secondary" size="sm">
+          <RotateCcw className="mr-1 h-4 w-4" />
+          Reset
+        </Button>
+      </div>
+    </div>
   );
 };
