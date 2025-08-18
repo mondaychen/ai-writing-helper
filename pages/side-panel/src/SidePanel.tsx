@@ -15,7 +15,6 @@ const SidePanel = () => {
       if (typeof message === 'object' && message !== null && 'type' in message && 'content' in message) {
         const msg = message as { type: string; content: string; isContentEditable?: boolean };
         if (msg.type === 'OPEN_SIDE_PANEL_EDITOR' && msg.content) {
-          console.log('[CEB] isContentEditable', msg);
           setCurrentContent(msg.content);
           setIsContentEditable(msg.isContentEditable || false);
         }

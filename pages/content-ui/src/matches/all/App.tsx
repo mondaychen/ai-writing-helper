@@ -19,45 +19,8 @@ export default function App() {
 
   const handleApply = useCallback((content: string) => {
     if (focusedElementRef.current) {
-      // Check if it's a contenteditable element
+      // Do nothing if it's a contenteditable element
       if (focusedElementRef.current.isContentEditable) {
-        // For contenteditable elements, copy to clipboard and show message
-        navigator.clipboard
-          .writeText(content)
-          .then(() => {
-            // Create a temporary notification
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            z-index: 10000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            max-width: 300px;
-          `;
-            notification.textContent = 'Content copied to clipboard! Please paste manually (Ctrl+V / Cmd+V)';
-            document.body.appendChild(notification);
-
-            // Remove notification after 3 seconds
-            setTimeout(() => {
-              if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-              }
-            }, 3000);
-
-            console.log('[CEB] Contenteditable detected - copied to clipboard for manual paste');
-          })
-          .catch(error => {
-            console.error('[CEB] Failed to copy contenteditable content to clipboard:', error);
-            // Fallback: show error message
-            alert('Contenteditable element detected. Please copy the content manually and paste it.');
-          });
         return;
       }
 
@@ -104,7 +67,6 @@ export default function App() {
       setIsContentEditable(focusedElement.isContentEditable);
 
       if (uiModeSettings.mode === UI_MODE.SIDE_PANEL) {
-        console.log('[CEB] isContentEditable', focusedElement.isContentEditable);
         chrome.runtime.sendMessage({
           type: 'OPEN_SIDE_PANEL_EDITOR',
           content: content,
@@ -119,9 +81,12 @@ export default function App() {
   }, [uiModeSettings.mode]);
 
   useEffect(() => {
-    console.log('[CEB] Content ui all loaded');
-
     const handleKeyDown = (e: KeyboardEvent) => {
+      // safety check: do nothing if user did not set any modifier
+      if (shortcutSettings.modifiers.length === 0) {
+        return;
+      }
+
       const isMatch =
         shortcutSettings.modifiers.every((modifier: string) => {
           switch (modifier) {
@@ -139,7 +104,6 @@ export default function App() {
         }) && e.key.toUpperCase() === shortcutSettings.key.toUpperCase();
 
       if (isMatch) {
-        console.log('isMatch', isMatch, 'preventing default');
         e.preventDefault();
         openEditor();
       }

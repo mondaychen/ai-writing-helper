@@ -23,7 +23,6 @@ export const EditorUI = ({
   showCloseButton = true,
   isContentEditable = false,
 }: EditorUIProps) => {
-  console.log('[CEB] EditorUI isContentEditable', isContentEditable);
   const [editorContent, setEditorContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
   const [reason, setReason] = useState('');
