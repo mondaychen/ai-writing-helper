@@ -231,6 +231,9 @@ importers:
       '@ai-sdk/openai':
         specifier: ^2.0.15
         version: 2.0.15(zod@4.0.17)
+      '@ai-sdk/provider':
+        specifier: ^2.0.0
+        version: 2.0.0
       ai:
         specifier: ^5.0.15
         version: 5.0.15(zod@4.0.17)
@@ -412,6 +415,9 @@ importers:
 
   pages/content-ui:
     dependencies:
+      '@ai-sdk/provider':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@extension/env':
         specifier: workspace:*
         version: link:../../packages/env
@@ -427,6 +433,12 @@ importers:
       '@extension/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      ai:
+        specifier: ^5.0.15
+        version: 5.0.15(zod@4.0.17)
+      zod:
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@extension/hmr':
         specifier: workspace:*

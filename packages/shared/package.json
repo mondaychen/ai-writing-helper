@@ -25,8 +25,9 @@
   "dependencies": {
     "@ai-sdk/google": "^2.0.6",
     "@ai-sdk/openai": "^2.0.15",
-    "react-error-boundary": "^6.0.0",
-    "ai": "^5.0.15"
+    "@ai-sdk/provider": "^2.0.0",
+    "ai": "^5.0.15",
+    "react-error-boundary": "^6.0.0"
   },
   "devDependencies": {
     "@extension/storage": "workspace:*",

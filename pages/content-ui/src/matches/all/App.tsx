@@ -1,9 +1,11 @@
 /* oxlint-disable jsx-a11y/click-events-have-key-events */
 /* oxlint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
-import { useStorage } from '@extension/shared';
+import { useStorage, useAiInstance } from '@extension/shared';
 import { keyboardShortcutStorage, aiSettingsStorage } from '@extension/storage';
 import { useEffect, useState, useRef } from 'react';
+
+import { rewriteContent as rewriteContentImpl } from './rewriteContent';
 
 export default function App() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -18,6 +20,7 @@ export default function App() {
   // Use the storage hook to read data reactively
   const shortcutSettings = useStorage(keyboardShortcutStorage);
   const aiSettings = useStorage(aiSettingsStorage);
+  const aiInstance = useAiInstance(aiSettings.provider, aiSettings.baseUrl, aiSettings.apiKey);
 
   useEffect(() => {
     console.log('[CEB] Content ui all loaded');
@@ -40,6 +43,7 @@ export default function App() {
         }) && e.key.toUpperCase() === shortcutSettings.key.toUpperCase();
 
       if (isMatch) {
+        console.log('isMatch', isMatch, 'preventing default');
         e.preventDefault();
         openEditor();
       }
@@ -68,8 +72,8 @@ export default function App() {
 
       setOriginalContent(content);
       setEditorContent(content);
-      setIsDialogOpen(true);
     }
+    setIsDialogOpen(true);
   };
 
   const applyChanges = () => {
@@ -109,48 +113,11 @@ export default function App() {
 
     setIsRewriting(true);
     try {
-      if (!aiSettings.apiKey) {
-        alert('Please configure your API key in the extension options first.');
-        setIsRewriting(false);
-        return;
-      }
-
-      const response = await fetch(`${aiSettings.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${aiSettings.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: aiSettings.modelName,
-          messages: [
-            {
-              role: 'system',
-              content: "You are a writing assistant. Follow the user's instructions to rewrite the provided text.",
-            },
-            {
-              role: 'user',
-              content: `Please rewrite the following text according to this instruction: "${prompt}"\n\nText to rewrite:\n${editorContent}`,
-            },
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const rewrittenText = data.choices[0]?.message?.content;
-
-      if (rewrittenText) {
-        setEditorContent(rewrittenText);
-      } else {
-        throw new Error('No content received from API');
-      }
+      const rewrittenContent = await rewriteContentImpl(aiInstance, editorContent, prompt);
+      setEditorContent(rewrittenContent);
     } catch (error) {
       console.error('Error rewriting content:', error);
-      alert(`Error rewriting content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Error rewriting content:\n${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsRewriting(false);
     }

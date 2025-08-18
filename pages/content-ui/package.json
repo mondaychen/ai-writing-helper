@@ -21,11 +21,14 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/provider": "^2.0.0",
     "@extension/env": "workspace:*",
     "@extension/i18n": "workspace:*",
     "@extension/shared": "workspace:*",
     "@extension/storage": "workspace:*",
-    "@extension/ui": "workspace:*"
+    "@extension/ui": "workspace:*",
+    "ai": "^5.0.15",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@extension/hmr": "workspace:*",
