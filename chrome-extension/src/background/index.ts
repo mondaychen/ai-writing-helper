@@ -1,9 +1,4 @@
 import 'webextension-polyfill';
-import { exampleThemeStorage } from '@extension/storage';
-
-exampleThemeStorage.get().then(theme => {
-  console.log('theme', theme);
-});
 
 chrome.runtime.onMessage.addListener((message, sender, _sendResponse) => {
   if (message.type === 'OPEN_SIDE_PANEL_EDITOR') {
@@ -19,10 +14,8 @@ chrome.runtime.onMessage.addListener((message, sender, _sendResponse) => {
       chrome.runtime.sendMessage({
         type: 'OPEN_SIDE_PANEL_EDITOR',
         content: message.content,
+        isContentEditable: message.isContentEditable,
       });
     }
   }
 });
-
-console.log('Background loaded');
-console.log("Edit 'chrome-extension/src/background/index.ts' and save to reload.");

@@ -11,6 +11,7 @@ interface EditorUIProps {
   onApply?: (content: string) => void;
   className?: string;
   showCloseButton?: boolean;
+  isContentEditable?: boolean;
 }
 
 export const EditorUI = ({
@@ -20,11 +21,14 @@ export const EditorUI = ({
   onApply,
   className = '',
   showCloseButton = true,
+  isContentEditable = false,
 }: EditorUIProps) => {
+  console.log('[CEB] EditorUI isContentEditable', isContentEditable);
   const [editorContent, setEditorContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
   const [reason, setReason] = useState('');
   const [prompt, setPrompt] = useState('');
+  const [applyButtonHover, setApplyButtonHover] = useState(false);
   const [isRewriting, setIsRewriting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -137,9 +141,40 @@ export const EditorUI = ({
         <button onClick={copyToClipboard} className="cursor-pointer rounded border bg-white px-4 py-2 text-blue-500">
           Copy
         </button>
-        <button onClick={applyChanges} className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white">
-          Apply
-        </button>
+        <div className="relative">
+          <button
+            onClick={applyChanges}
+            disabled={isContentEditable}
+            onMouseEnter={() => setApplyButtonHover(true)}
+            onMouseLeave={() => setApplyButtonHover(false)}
+            className={`cursor-pointer rounded px-4 py-2 text-white ${
+              isContentEditable ? 'cursor-not-allowed bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+            title={isContentEditable ? 'Apply is disabled for rich text editors. Use Copy button instead.' : ''}>
+            Apply
+          </button>
+          {isContentEditable && applyButtonHover && (
+            <div className="absolute bottom-full right-0 mb-2 w-80 rounded-md border border-yellow-200 bg-yellow-50 p-3 shadow-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Rich text editor detected.</strong> Apply is disabled. Use the Copy button and paste
+                    manually using Ctrl+V (or Cmd+V on Mac).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
