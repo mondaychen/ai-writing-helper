@@ -14,6 +14,14 @@ const Popup = () => {
     chrome.runtime.openOptionsPage();
   };
 
+  const openSidePanel = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      if (tabs[0]?.id) {
+        chrome.sidePanel.open({ tabId: tabs[0].id });
+      }
+    });
+  };
+
   return (
     <div className={cn('App', isLight ? 'bg-slate-50' : 'bg-gray-800')}>
       <header className={cn('App-header', isLight ? 'text-gray-900' : 'text-gray-100')}>
@@ -29,6 +37,14 @@ const Popup = () => {
             )}
             onClick={openOptionsPage}>
             Open Settings
+          </button>
+          <button
+            className={cn(
+              'rounded px-4 py-2 font-medium shadow hover:scale-105',
+              isLight ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-white hover:bg-green-600',
+            )}
+            onClick={openSidePanel}>
+            Open Side Panel
           </button>
           <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
         </div>
