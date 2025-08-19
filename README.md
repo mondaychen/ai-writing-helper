@@ -135,4 +135,6 @@ If you have any suggestions or questions, please feel free to open an issue.
 
 If you find this project helpful, please consider:
 - ⭐ Starring the repository
-- 💰 Sponsoring the author <iframe src="https://github.com/sponsors/mondaychen/button" title="Sponsor mondaychen" height="32" width="114" style="border: 0; border-radius: 6px; display: inline-block;"></iframe>
+- 💰 Sponsoring the author
+
+<iframe src="https://github.com/sponsors/mondaychen/button" title="Sponsor mondaychen" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
