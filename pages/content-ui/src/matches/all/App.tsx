@@ -17,6 +17,16 @@ export default function App() {
   const shortcutSettings = useStorage(keyboardShortcutStorage);
   const uiModeSettings = useStorage(uiModeStorage);
 
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    document.dispatchEvent(new CustomEvent('CEB:extension:iframe:message', { detail: { type: 'HIDE_IFRAME' } }));
+  };
+
+  const openDialog = () => {
+    setIsDialogOpen(true);
+    document.dispatchEvent(new CustomEvent('CEB:extension:iframe:message', { detail: { type: 'SHOW_IFRAME' } }));
+  };
+
   const handleApply = useCallback((content: string) => {
     if (focusedElementRef.current) {
       // Do nothing if it's a contenteditable element
@@ -74,18 +84,18 @@ export default function App() {
           isContentAppliable: !focusedElement.isContentEditable,
         });
       } else {
-        setIsDialogOpen(true);
+        openDialog();
       }
     } else {
-      if (uiModeSettings.mode === UI_MODE.DIALOG) {
-        setIsContentAppliable(false);
-        setIsDialogOpen(true);
-      } else {
+      if (uiModeSettings.mode === UI_MODE.SIDE_PANEL) {
         chrome.runtime.sendMessage({
           type: 'OPEN_SIDE_PANEL_EDITOR',
           content: '',
           isContentAppliable: false,
         });
+      } else {
+        openDialog();
+        setIsContentAppliable(false);
       }
     }
   }, [uiModeSettings.mode]);
@@ -136,10 +146,6 @@ export default function App() {
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
   }, [shortcutSettings, handleApply, openEditor]);
-
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-  };
 
   useEffect(() => {
     if (isDialogOpen && dialogRef.current) {
