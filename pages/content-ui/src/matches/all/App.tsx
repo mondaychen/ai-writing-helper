@@ -1,7 +1,7 @@
 /* oxlint-disable jsx-a11y/click-events-have-key-events */
 /* oxlint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
-import { useStorage } from '@extension/shared';
+import { useStorage, IFRAME_MESSAGE_EVENT_NAME, IFRAME_MESSAGE_TYPE } from '@extension/shared';
 import { keyboardShortcutStorage, uiModeStorage, UI_MODE } from '@extension/storage';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { EditorUI } from '@extension/ui/app/EditorUI';
@@ -19,12 +19,16 @@ export default function App() {
 
   const closeDialog = () => {
     setIsDialogOpen(false);
-    document.dispatchEvent(new CustomEvent('CEB:extension:iframe:message', { detail: { type: 'HIDE_IFRAME' } }));
+    document.dispatchEvent(
+      new CustomEvent(IFRAME_MESSAGE_EVENT_NAME, { detail: { type: IFRAME_MESSAGE_TYPE.HIDE_IFRAME } }),
+    );
   };
 
   const openDialog = () => {
     setIsDialogOpen(true);
-    document.dispatchEvent(new CustomEvent('CEB:extension:iframe:message', { detail: { type: 'SHOW_IFRAME' } }));
+    document.dispatchEvent(
+      new CustomEvent(IFRAME_MESSAGE_EVENT_NAME, { detail: { type: IFRAME_MESSAGE_TYPE.SHOW_IFRAME } }),
+    );
   };
 
   const handleApply = useCallback((content: string) => {

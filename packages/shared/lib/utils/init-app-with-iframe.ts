@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import type { ReactElement } from 'react';
+import { IFRAME_MESSAGE_EVENT_NAME, IFRAME_MESSAGE_TYPE } from '../../const.js';
 
 export const initAppWithIframe = ({
   id,
@@ -24,6 +25,8 @@ export const initAppWithIframe = ({
   // Set default iframe attributes
   iframe.setAttribute('frameborder', '0');
   iframe.setAttribute('scrolling', 'no');
+  // by default, iframe is not visible
+  // TODO: make this configurable -- if needed
   iframe.style.border = 'none';
   iframe.style.width = '100%';
   iframe.style.height = '100%';
@@ -65,13 +68,13 @@ export const initAppWithIframe = ({
     createRoot(rootIntoIframe).render(app);
   };
   // set up event listener to show or hide iframe
-  document.addEventListener('CEB:extension:iframe:message', (event: Event) => {
+  document.addEventListener(IFRAME_MESSAGE_EVENT_NAME, (event: Event) => {
     if ('detail' in event) {
       const customEvent = event as CustomEvent;
       const message = customEvent.detail;
-      if (message.type === 'SHOW_IFRAME') {
+      if (message.type === IFRAME_MESSAGE_TYPE.SHOW_IFRAME) {
         iframe.style.display = 'block';
-      } else if (message.type === 'HIDE_IFRAME') {
+      } else if (message.type === IFRAME_MESSAGE_TYPE.HIDE_IFRAME) {
         iframe.style.display = 'none';
       }
     }
