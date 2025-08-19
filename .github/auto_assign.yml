@@ -1,9 +1,9 @@
-addReviewers: true
+addReviewers: false
 
 reviewers:
-  - Jonghakseo
+  - mondaychen
 
-addAssignees: author
+addAssignees: false
 
 filterLabels:
   exclude:
