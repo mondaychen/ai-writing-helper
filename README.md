@@ -1,6 +1,6 @@
 # AI Writing Helper
 
-A powerful Chrome/Firefox extension that helps you write better with AI assistance. Built with React, TypeScript, and modern web technologies.
+A powerful Chrome/Firefox extension that helps you write better with AI assistance.
 
 ![](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![](https://img.shields.io/badge/Typescript-3178C6?style=flat-square&logo=typescript&logoColor=white)
@@ -10,12 +10,10 @@ A powerful Chrome/Firefox extension that helps you write better with AI assistan
 
 ## Features
 
-✨ **AI-Powered Writing Assistance** - Get intelligent suggestions to improve your writing
-📝 **Real-time Enhancement** - Works on any website with text input
-🎨 **Modern UI** - Clean, intuitive interface built with React and Tailwind CSS
-🌐 **Cross-browser Support** - Compatible with Chrome and Firefox
-⚡ **Fast Performance** - Built with Vite for optimal speed
-🔧 **Customizable** - Adjustable settings through the options page
+- ✨ **AI-Powered Writing Assistance** - Get intelligent suggestions to improve your writing (with LLM of your choice)
+- 📝 **Real-time Enhancement** - Works on any website with text input
+- 🌐 **Cross-browser Support** - Compatible with Chrome and Firefox
+- 🔧 **Flexible UX** - Side panel or dialog mode, with customizable settings
 
 ## Installation
 
@@ -46,7 +44,7 @@ A powerful Chrome/Firefox extension that helps you write better with AI assistan
 ### Prerequisites
 
 - Node.js >= 22.15.1
-- pnpm (recommended) or npm
+- pnpm >= 10.11.0
 
 ### Getting Started
 
@@ -82,13 +80,12 @@ pnpm dev:firefox
 
 Built using a modern monorepo structure with [Turborepo](https://turbo.build/) for efficient builds and development.
 
-### Key Technologies
+### Technologies
 
 - **React 19** - Modern UI framework with concurrent features
 - **TypeScript** - Type-safe development
 - **Vite** - Lightning-fast build tool and dev server
 - **Tailwind CSS** - Utility-first CSS framework
-- **Chrome Extension MV3** - Latest manifest version for enhanced security
 - **Turborepo** - Monorepo build orchestration
 - **pnpm** - Fast, disk space efficient package manager
 
@@ -100,13 +97,11 @@ Built using a modern monorepo structure with [Turborepo](https://turbo.build/) f
 - **Background Script** - Service worker for extension logic
 - **Options Page** - Configuration and settings interface
 
-### Packages
+### Notable Packages
 
 - `packages/shared/` - Common utilities, hooks, and components
 - `packages/storage/` - Chrome extension storage helpers with React hooks
-- `packages/i18n/` - Internationalization with type safety
 - `packages/ui/` - Shared UI components with Tailwind integration
-- `packages/hmr/` - Hot module reload for development
 
 ## Contributing
 
@@ -126,8 +121,7 @@ We welcome contributions! Please feel free to submit issues, feature requests, o
 If the development server stops auto-reloading:
 
 1. Restart the dev server: `Ctrl+C` then `pnpm dev`
-2. Refresh the extension in Chrome: Go to `chrome://extensions` and click the refresh button
-3. If you encounter `grpc` errors, kill the turbo process and restart
+2. Refresh the extension in Chrome: Go to `chrome://extensions` and click the refresh button (You always need to do this after making changes to background script)
 
 ### Build Issues
 
@@ -135,17 +129,12 @@ If the development server stops auto-reloading:
 - Clear build cache: `pnpm clean`
 - Reinstall dependencies: `pnpm clean:install`
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Support
 
 If you find this project helpful, please consider:
 - ⭐ Starring the repository
-- 🐛 Reporting bugs or issues
-- 💡 Suggesting new features
 - 🤝 Contributing to the codebase
+- 🐛 Reporting bugs or issues
 
 ---
 
