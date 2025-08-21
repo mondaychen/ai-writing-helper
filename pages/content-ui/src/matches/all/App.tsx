@@ -176,6 +176,7 @@ export default function App() {
     }
   }, [shortcutSettings]);
 
+  // shortcut listener -- no-op if no shortcut is enabled
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check dialog shortcut first
@@ -193,6 +194,15 @@ export default function App() {
       }
     };
 
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openEditor]);
+
+  // set up message listener for apply content (e.g. from side panel)
+  useEffect(() => {
     const handleMessage = (message: unknown) => {
       if (typeof message === 'object' && message !== null && 'type' in message && 'content' in message) {
         const msg = message as { type: string; content: string };
@@ -202,14 +212,12 @@ export default function App() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
     chrome.runtime.onMessage.addListener(handleMessage);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
-  }, [handleApply, openEditor]);
+  }, [handleApply]);
 
   useEffect(() => {
     if (isDialogOpen && dialogRef.current) {
