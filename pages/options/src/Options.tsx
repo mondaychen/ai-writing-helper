@@ -5,14 +5,8 @@ import type { z } from 'zod';
 // import { t } from '@extension/i18n';
 import { toast } from 'sonner';
 import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import {
-  exampleThemeStorage,
-  aiSettingsStorage,
-  keyboardShortcutStorage,
-  uiModeStorage,
-  UI_MODE,
-} from '@extension/storage';
-import type { KeyboardShortcutType } from '@extension/storage';
+import { exampleThemeStorage, aiSettingsStorage, keyboardShortcutStorage } from '@extension/storage';
+import type { KeyboardShortcutType, KeyboardShortcutsType } from '@extension/storage';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
 import { Button } from '@/lib/components/ui/button';
 import { Checkbox } from '@/lib/components/ui/checkbox';
@@ -20,27 +14,35 @@ import { Input } from '@/lib/components/ui/input';
 import { Toaster } from '@/lib/components/ui/sonner';
 import { Label } from '@/lib/components/ui/label';
 import { Switch } from '@/lib/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
+
 import { AISetting, type formSchema } from './AISetting';
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
   const aiSettings = useStorage(aiSettingsStorage);
   const shortcutSettings = useStorage(keyboardShortcutStorage);
-  const uiModeSettings = useStorage(uiModeStorage);
 
-  const [shortcutData, setShortcutData] = useState({
+  const [dialogShortcut, setDialogShortcut] = useState<KeyboardShortcutType>({
     modifiers: ['ctrlKey', 'shiftKey'],
-    key: 'E',
+    key: 'W',
+    enabled: true,
+  });
+
+  const [sidePanelShortcut, setSidePanelShortcut] = useState<KeyboardShortcutType>({
+    modifiers: ['ctrlKey', 'shiftKey'],
+    key: 'S',
+    enabled: false,
   });
 
   useEffect(() => {
-    if (shortcutSettings && typeof shortcutSettings === 'object' && 'modifiers' in shortcutSettings) {
-      const settings = shortcutSettings as KeyboardShortcutType;
-      setShortcutData({
-        modifiers: settings.modifiers,
-        key: settings.key,
-      });
+    if (shortcutSettings && typeof shortcutSettings === 'object') {
+      const settings = shortcutSettings as KeyboardShortcutsType;
+      if (settings.dialog) {
+        setDialogShortcut(settings.dialog);
+      }
+      if (settings.sidePanel) {
+        setSidePanelShortcut(settings.sidePanel);
+      }
     }
   }, [shortcutSettings]);
 
@@ -49,36 +51,54 @@ const Options = () => {
     toast.success('AI settings saved successfully!');
   };
 
-  const handleSaveShortcut = async () => {
-    // Prevent saving shortcuts without modifiers to avoid conflicts with normal typing
-    if (shortcutData.modifiers.length === 0) {
+  const handleSaveShortcuts = async () => {
+    // Validate dialog shortcut
+    if (dialogShortcut.enabled && dialogShortcut.modifiers.length === 0) {
       toast.error(
-        'Please select at least one modifier (Ctrl, Shift, Alt, or Meta). Shortcuts without modifiers will conflict with everyday typing.',
+        'Please select at least one modifier for the Dialog shortcut. Shortcuts without modifiers will conflict with everyday typing.',
       );
       return;
     }
 
-    await keyboardShortcutStorage.set(shortcutData);
-    toast.success('Keyboard shortcut saved successfully!');
+    // Validate side panel shortcut
+    if (sidePanelShortcut.enabled && sidePanelShortcut.modifiers.length === 0) {
+      toast.error(
+        'Please select at least one modifier for the Side Panel shortcut. Shortcuts without modifiers will conflict with everyday typing.',
+      );
+      return;
+    }
+
+    await keyboardShortcutStorage.set({
+      dialog: dialogShortcut,
+      sidePanel: sidePanelShortcut,
+    });
+    toast.success('Keyboard shortcuts saved successfully!');
   };
 
-  const handleUIModeChange = async (mode: string) => {
-    await uiModeStorage.set({ mode: mode as typeof UI_MODE.DIALOG | typeof UI_MODE.SIDE_PANEL });
-    toast.success('UI mode saved successfully!');
-  };
+  const handleModifierChange = (shortcutType: 'dialog' | 'sidePanel', modifier: string, checked: boolean) => {
+    const setShortcut = shortcutType === 'dialog' ? setDialogShortcut : setSidePanelShortcut;
 
-  const handleModifierChange = (modifier: string, checked: boolean) => {
     if (checked) {
-      setShortcutData(prev => ({
+      setShortcut(prev => ({
         ...prev,
         modifiers: [...prev.modifiers, modifier],
       }));
     } else {
-      setShortcutData(prev => ({
+      setShortcut(prev => ({
         ...prev,
         modifiers: prev.modifiers.filter(m => m !== modifier),
       }));
     }
+  };
+
+  const handleKeyChange = (shortcutType: 'dialog' | 'sidePanel', key: string) => {
+    const setShortcut = shortcutType === 'dialog' ? setDialogShortcut : setSidePanelShortcut;
+    setShortcut(prev => ({ ...prev, key: key.toUpperCase() }));
+  };
+
+  const handleEnabledChange = (shortcutType: 'dialog' | 'sidePanel', enabled: boolean) => {
+    const setShortcut = shortcutType === 'dialog' ? setDialogShortcut : setSidePanelShortcut;
+    setShortcut(prev => ({ ...prev, enabled }));
   };
 
   return (
@@ -95,86 +115,149 @@ const Options = () => {
             <AISetting onSubmit={handleSaveSettings} defaultValues={aiSettings} />
           </section>
 
-          {/* Keyboard Shortcut Section */}
+          {/* Keyboard Shortcuts Section */}
           <section className={cn('rounded-lg p-6', isLight ? 'bg-white shadow-md' : 'bg-gray-950')}>
-            <h2 className="mb-4 text-xl font-semibold">Keyboard Shortcut</h2>
-            <div className="space-y-4">
-              <fieldset>
-                <legend className="mb-2 block text-sm font-medium">Modifiers</legend>
-                <div className="flex flex-wrap gap-4">
-                  {['ctrlKey', 'shiftKey', 'altKey', 'metaKey'].map(modifier => (
-                    <label key={modifier} className="flex items-center">
-                      <Checkbox
-                        checked={shortcutData.modifiers.includes(modifier)}
-                        onCheckedChange={checked => handleModifierChange(modifier, checked as boolean)}
-                        className="mr-1"
-                      />
-                      <span className="text-sm">
-                        {modifier === 'ctrlKey' && 'Ctrl'}
-                        {modifier === 'shiftKey' && 'Shift'}
-                        {modifier === 'altKey' && 'Alt'}
-                        {modifier === 'metaKey' && 'Meta/Cmd'}
-                      </span>
-                    </label>
-                  ))}
+            <h2 className="mb-4 text-xl font-semibold">Keyboard Shortcuts</h2>
+            <div className="space-y-6">
+              {/* Dialog Shortcut */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="dialog-enabled"
+                    checked={dialogShortcut.enabled}
+                    onCheckedChange={checked => handleEnabledChange('dialog', checked)}
+                  />
+                  <Label htmlFor="dialog-enabled" className="text-lg font-medium">
+                    Open in Dialog
+                  </Label>
                 </div>
-              </fieldset>
-              <div>
-                <label htmlFor="shortcut-key" className="mb-2 block text-sm font-medium">
-                  Key
-                </label>
-                <Input
-                  id="shortcut-key"
-                  type="text"
-                  value={shortcutData.key}
-                  onChange={e => setShortcutData(prev => ({ ...prev, key: e.target.value.toUpperCase() }))}
-                  placeholder="E"
-                  maxLength={1}
-                />
+                {dialogShortcut.enabled && (
+                  <div className="space-y-4 border-l-4 pl-2">
+                    <fieldset>
+                      <legend className="mb-2 block text-sm font-medium">Modifiers</legend>
+                      <div className="flex flex-wrap gap-4">
+                        {['ctrlKey', 'shiftKey', 'altKey', 'metaKey'].map(modifier => (
+                          <label key={modifier} className="flex items-center">
+                            <Checkbox
+                              checked={dialogShortcut.modifiers.includes(modifier)}
+                              onCheckedChange={checked => handleModifierChange('dialog', modifier, checked as boolean)}
+                              className="mr-1"
+                            />
+                            <span className="text-sm">
+                              {modifier === 'ctrlKey' && 'Ctrl'}
+                              {modifier === 'shiftKey' && 'Shift'}
+                              {modifier === 'altKey' && 'Alt'}
+                              {modifier === 'metaKey' && 'Meta/Cmd'}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <div>
+                      <label htmlFor="dialog-key" className="mb-2 block text-sm font-medium">
+                        Key
+                      </label>
+                      <Input
+                        id="dialog-key"
+                        type="text"
+                        value={dialogShortcut.key}
+                        onChange={e => handleKeyChange('dialog', e.target.value)}
+                        placeholder="One letter, e.g. W"
+                        maxLength={1}
+                      />
+                    </div>
+                    <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
+                      <strong>Current shortcut: </strong>
+                      {dialogShortcut.modifiers
+                        .map(mod => {
+                          const displayName =
+                            mod === 'ctrlKey'
+                              ? 'Ctrl'
+                              : mod === 'shiftKey'
+                                ? 'Shift'
+                                : mod === 'altKey'
+                                  ? 'Alt'
+                                  : 'Meta';
+                          return displayName;
+                        })
+                        .join(' + ')}{' '}
+                      + {dialogShortcut.key}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
-                <strong>Current shortcut: </strong>
-                {shortcutData.modifiers
-                  .map(mod => {
-                    const displayName =
-                      mod === 'ctrlKey' ? 'Ctrl' : mod === 'shiftKey' ? 'Shift' : mod === 'altKey' ? 'Alt' : 'Meta';
-                    return displayName;
-                  })
-                  .join(' + ')}{' '}
-                + {shortcutData.key}
-              </div>
-              <Button onClick={handleSaveShortcut}>Save Shortcut</Button>
-            </div>
-          </section>
 
-          {/* UI Mode Section */}
-          <section className={cn('rounded-lg p-6', isLight ? 'bg-white shadow-md' : 'bg-gray-950')}>
-            <h2 className="mb-4 text-xl font-semibold">Editor Interface</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="ui-mode-select" className="mb-2 block text-sm font-medium">
-                  Editor Display Mode
-                </Label>
-                <Select value={uiModeSettings.mode} onValueChange={handleUIModeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select display mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UI_MODE.DIALOG}>Modal Dialog (overlay on page)</SelectItem>
-                    <SelectItem value={UI_MODE.SIDE_PANEL}>Side Panel (Chrome extension panel)</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Side Panel Shortcut */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="side-panel-enabled"
+                    checked={sidePanelShortcut.enabled}
+                    onCheckedChange={checked => handleEnabledChange('sidePanel', checked)}
+                  />
+                  <Label htmlFor="side-panel-enabled" className="text-lg font-medium">
+                    Open Side Panel
+                  </Label>
+                </div>
+                {sidePanelShortcut.enabled && (
+                  <div className="space-y-4 border-l-4 pl-2">
+                    <fieldset>
+                      <legend className="mb-2 block text-sm font-medium">Modifiers</legend>
+                      <div className="flex flex-wrap gap-4">
+                        {['ctrlKey', 'shiftKey', 'altKey', 'metaKey'].map(modifier => (
+                          <label key={modifier} className="flex items-center">
+                            <Checkbox
+                              checked={sidePanelShortcut.modifiers.includes(modifier)}
+                              onCheckedChange={checked =>
+                                handleModifierChange('sidePanel', modifier, checked as boolean)
+                              }
+                              className="mr-1"
+                            />
+                            <span className="text-sm">
+                              {modifier === 'ctrlKey' && 'Ctrl'}
+                              {modifier === 'shiftKey' && 'Shift'}
+                              {modifier === 'altKey' && 'Alt'}
+                              {modifier === 'metaKey' && 'Meta/Cmd'}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                    <div>
+                      <label htmlFor="side-panel-key" className="mb-2 block text-sm font-medium">
+                        Key
+                      </label>
+                      <Input
+                        id="side-panel-key"
+                        type="text"
+                        value={sidePanelShortcut.key}
+                        onChange={e => handleKeyChange('sidePanel', e.target.value)}
+                        placeholder="One key, e.g. S"
+                        maxLength={1}
+                      />
+                    </div>
+                    <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
+                      <strong>Current shortcut: </strong>
+                      {sidePanelShortcut.modifiers
+                        .map(mod => {
+                          const displayName =
+                            mod === 'ctrlKey'
+                              ? 'Ctrl'
+                              : mod === 'shiftKey'
+                                ? 'Shift'
+                                : mod === 'altKey'
+                                  ? 'Alt'
+                                  : 'Meta';
+                          return displayName;
+                        })
+                        .join(' + ')}{' '}
+                      + {sidePanelShortcut.key}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
-                <strong>Current mode: </strong>
-                {uiModeSettings.mode === UI_MODE.DIALOG ? 'Modal Dialog' : 'Side Panel'}
-                <br />
-                <span className="text-xs opacity-75">
-                  {uiModeSettings.mode === UI_MODE.DIALOG
-                    ? 'Editor appears as an overlay on the current page'
-                    : "Editor appears in Chrome's side panel (requires Chrome 114+)"}
-                </span>
-              </div>
+
+              <Button onClick={handleSaveShortcuts}>Save Shortcuts</Button>
             </div>
           </section>
 

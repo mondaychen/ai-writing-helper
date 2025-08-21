@@ -4,15 +4,29 @@ import type { BaseStorageType } from '../types.js';
 interface KeyboardShortcutType {
   modifiers: string[];
   key: string;
+  enabled: boolean;
 }
 
-type KeyboardShortcutStorageType = BaseStorageType<KeyboardShortcutType>;
+interface KeyboardShortcutsType {
+  dialog: KeyboardShortcutType;
+  sidePanel: KeyboardShortcutType;
+}
 
-const storage = createStorage<KeyboardShortcutType>(
+type KeyboardShortcutStorageType = BaseStorageType<KeyboardShortcutsType>;
+
+const storage = createStorage<KeyboardShortcutsType>(
   'keyboard-shortcut-storage-key',
   {
-    modifiers: ['ctrlKey', 'shiftKey'],
-    key: 'E',
+    dialog: {
+      modifiers: ['ctrlKey', 'shiftKey'],
+      key: 'W',
+      enabled: true,
+    },
+    sidePanel: {
+      modifiers: ['ctrlKey', 'shiftKey'],
+      key: 'S',
+      enabled: false,
+    },
   },
   {
     storageEnum: StorageEnum.Local,
@@ -24,4 +38,9 @@ const keyboardShortcutStorage: KeyboardShortcutStorageType = {
   ...storage,
 };
 
-export { type KeyboardShortcutType, type KeyboardShortcutStorageType, keyboardShortcutStorage };
+export {
+  type KeyboardShortcutType,
+  type KeyboardShortcutsType,
+  type KeyboardShortcutStorageType,
+  keyboardShortcutStorage,
+};

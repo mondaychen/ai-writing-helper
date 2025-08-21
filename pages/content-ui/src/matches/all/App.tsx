@@ -2,7 +2,7 @@
 /* oxlint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
 import { useStorage, IFRAME_MESSAGE_EVENT_NAME, IFRAME_MESSAGE_TYPE } from '@extension/shared';
-import { keyboardShortcutStorage, uiModeStorage, UI_MODE } from '@extension/storage';
+import { keyboardShortcutStorage } from '@extension/storage';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { EditorUI } from '@extension/ui/app/EditorUI';
 
@@ -15,7 +15,6 @@ export default function App() {
 
   // Use the storage hook to read data reactively
   const shortcutSettings = useStorage(keyboardShortcutStorage);
-  const uiModeSettings = useStorage(uiModeStorage);
 
   const closeDialog = () => {
     setIsDialogOpen(false);
@@ -63,7 +62,7 @@ export default function App() {
     }
   }, []);
 
-  const openEditor = useCallback(() => {
+  const openEditor = useCallback((mode: 'dialog' | 'sidePanel') => {
     const focusedElement = document.activeElement as HTMLElement;
 
     if (
@@ -81,7 +80,7 @@ export default function App() {
       // isContentAppliable is true when there is a focused element AND it's NOT contentEditable
       setIsContentAppliable(!focusedElement.isContentEditable);
 
-      if (uiModeSettings.mode === UI_MODE.SIDE_PANEL) {
+      if (mode === 'sidePanel') {
         chrome.runtime.sendMessage({
           type: 'OPEN_SIDE_PANEL_EDITOR',
           content: content,
@@ -91,7 +90,7 @@ export default function App() {
         openDialog();
       }
     } else {
-      if (uiModeSettings.mode === UI_MODE.SIDE_PANEL) {
+      if (mode === 'sidePanel') {
         chrome.runtime.sendMessage({
           type: 'OPEN_SIDE_PANEL_EDITOR',
           content: '',
@@ -102,61 +101,95 @@ export default function App() {
         setIsContentAppliable(false);
       }
     }
-  }, [uiModeSettings.mode]);
+  }, []);
 
-  // Store pre-computed shortcut matcher for maximum performance
-  const shortcutMatcher = useRef<((e: KeyboardEvent) => boolean) | null>(null);
+  // Store pre-computed shortcut matchers for maximum performance
+  const dialogMatcher = useRef<((e: KeyboardEvent) => boolean) | null>(null);
+  const sidePanelMatcher = useRef<((e: KeyboardEvent) => boolean) | null>(null);
 
-  // Update shortcut matcher when settings change
+  // Update shortcut matchers when settings change
   useEffect(() => {
-    if (shortcutSettings.modifiers.length === 0) {
-      shortcutMatcher.current = null; // No shortcuts configured
-      return;
+    // Create matcher for dialog shortcut
+    if (shortcutSettings.dialog.enabled && shortcutSettings.dialog.modifiers.length > 0) {
+      const modifierChecks: ((e: KeyboardEvent) => boolean)[] = [];
+      const targetKey = shortcutSettings.dialog.key.toUpperCase();
+
+      for (const modifier of shortcutSettings.dialog.modifiers) {
+        switch (modifier) {
+          case 'ctrlKey':
+            modifierChecks.push((e: KeyboardEvent) => e.ctrlKey);
+            break;
+          case 'shiftKey':
+            modifierChecks.push((e: KeyboardEvent) => e.shiftKey);
+            break;
+          case 'altKey':
+            modifierChecks.push((e: KeyboardEvent) => e.altKey);
+            break;
+          case 'metaKey':
+            modifierChecks.push((e: KeyboardEvent) => e.metaKey);
+            break;
+        }
+      }
+
+      dialogMatcher.current = (e: KeyboardEvent) => {
+        if (e.key.toUpperCase() !== targetKey) return false;
+        for (const check of modifierChecks) {
+          if (!check(e)) return false;
+        }
+        return true;
+      };
+    } else {
+      dialogMatcher.current = null;
     }
 
-    // Pre-compute modifier checks and key comparison (runs once, not on every keypress)
-    const modifierChecks: ((e: KeyboardEvent) => boolean)[] = [];
-    const targetKey = shortcutSettings.key.toUpperCase(); // Cache uppercase key
+    // Create matcher for side panel shortcut
+    if (shortcutSettings.sidePanel.enabled && shortcutSettings.sidePanel.modifiers.length > 0) {
+      const modifierChecks: ((e: KeyboardEvent) => boolean)[] = [];
+      const targetKey = shortcutSettings.sidePanel.key.toUpperCase();
 
-    for (const modifier of shortcutSettings.modifiers) {
-      switch (modifier) {
-        case 'ctrlKey':
-          modifierChecks.push((e: KeyboardEvent) => e.ctrlKey); // Pre-compile modifier check
-          break;
-        case 'shiftKey':
-          modifierChecks.push((e: KeyboardEvent) => e.shiftKey);
-          break;
-        case 'altKey':
-          modifierChecks.push((e: KeyboardEvent) => e.altKey);
-          break;
-        case 'metaKey':
-          modifierChecks.push((e: KeyboardEvent) => e.metaKey);
-          break;
+      for (const modifier of shortcutSettings.sidePanel.modifiers) {
+        switch (modifier) {
+          case 'ctrlKey':
+            modifierChecks.push((e: KeyboardEvent) => e.ctrlKey);
+            break;
+          case 'shiftKey':
+            modifierChecks.push((e: KeyboardEvent) => e.shiftKey);
+            break;
+          case 'altKey':
+            modifierChecks.push((e: KeyboardEvent) => e.altKey);
+            break;
+          case 'metaKey':
+            modifierChecks.push((e: KeyboardEvent) => e.metaKey);
+            break;
+        }
       }
+
+      sidePanelMatcher.current = (e: KeyboardEvent) => {
+        if (e.key.toUpperCase() !== targetKey) return false;
+        for (const check of modifierChecks) {
+          if (!check(e)) return false;
+        }
+        return true;
+      };
+    } else {
+      sidePanelMatcher.current = null;
     }
-
-    // Create optimized matcher function (replaces expensive array.every() + string ops)
-    shortcutMatcher.current = (e: KeyboardEvent) => {
-      // Fast path: check key first (most likely to fail, avoids modifier checks)
-      if (e.key.toUpperCase() !== targetKey) return false;
-
-      // Check modifiers only if key matches (short-circuit evaluation)
-      for (const check of modifierChecks) {
-        if (!check(e)) return false;
-      }
-      return true;
-    };
   }, [shortcutSettings]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ultra-fast early return if no matcher
-      if (!shortcutMatcher.current) return;
-
-      // Use pre-computed matcher
-      if (shortcutMatcher.current(e)) {
+      // Check dialog shortcut first
+      if (dialogMatcher.current?.(e)) {
         e.preventDefault();
-        openEditor();
+        openEditor('dialog');
+        return;
+      }
+
+      // Check side panel shortcut
+      if (sidePanelMatcher.current?.(e)) {
+        e.preventDefault();
+        openEditor('sidePanel');
+        return;
       }
     };
 
