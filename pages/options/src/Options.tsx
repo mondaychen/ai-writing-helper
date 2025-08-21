@@ -4,7 +4,14 @@ import { useState, useEffect } from 'react';
 import type { z } from 'zod';
 // import { t } from '@extension/i18n';
 import { toast } from 'sonner';
-import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
+import {
+  useStorage,
+  withErrorBoundary,
+  withSuspense,
+  validateShortcut,
+  ALL_MODIFIER_KEYS,
+  getModifierDisplayName,
+} from '@extension/shared';
 import { exampleThemeStorage, aiSettingsStorage, keyboardShortcutStorage } from '@extension/storage';
 import type { KeyboardShortcutType, KeyboardShortcutsType } from '@extension/storage';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
@@ -53,18 +60,16 @@ const Options = () => {
 
   const handleSaveShortcuts = async () => {
     // Validate dialog shortcut
-    if (dialogShortcut.enabled && dialogShortcut.modifiers.length === 0) {
-      toast.error(
-        'Please select at least one modifier for the Dialog shortcut. Shortcuts without modifiers will conflict with everyday typing.',
-      );
+    const dialogError = validateShortcut(dialogShortcut, 'Dialog');
+    if (dialogError) {
+      toast.error(dialogError);
       return;
     }
 
     // Validate side panel shortcut
-    if (sidePanelShortcut.enabled && sidePanelShortcut.modifiers.length === 0) {
-      toast.error(
-        'Please select at least one modifier for the Side Panel shortcut. Shortcuts without modifiers will conflict with everyday typing.',
-      );
+    const sidePanelError = validateShortcut(sidePanelShortcut, 'Side Panel');
+    if (sidePanelError) {
+      toast.error(sidePanelError);
       return;
     }
 
@@ -136,19 +141,14 @@ const Options = () => {
                     <fieldset>
                       <legend className="mb-2 block text-sm font-medium">Modifiers</legend>
                       <div className="flex flex-wrap gap-4">
-                        {['ctrlKey', 'shiftKey', 'altKey', 'metaKey'].map(modifier => (
+                        {ALL_MODIFIER_KEYS.map(modifier => (
                           <label key={modifier} className="flex items-center">
                             <Checkbox
                               checked={dialogShortcut.modifiers.includes(modifier)}
                               onCheckedChange={checked => handleModifierChange('dialog', modifier, checked as boolean)}
                               className="mr-1"
                             />
-                            <span className="text-sm">
-                              {modifier === 'ctrlKey' && 'Ctrl'}
-                              {modifier === 'shiftKey' && 'Shift'}
-                              {modifier === 'altKey' && 'Alt'}
-                              {modifier === 'metaKey' && 'Meta/Cmd'}
-                            </span>
+                            <span className="text-sm">{getModifierDisplayName(modifier)}</span>
                           </label>
                         ))}
                       </div>
@@ -168,20 +168,8 @@ const Options = () => {
                     </div>
                     <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
                       <strong>Current shortcut: </strong>
-                      {dialogShortcut.modifiers
-                        .map(mod => {
-                          const displayName =
-                            mod === 'ctrlKey'
-                              ? 'Ctrl'
-                              : mod === 'shiftKey'
-                                ? 'Shift'
-                                : mod === 'altKey'
-                                  ? 'Alt'
-                                  : 'Meta';
-                          return displayName;
-                        })
-                        .join(' + ')}{' '}
-                      + {dialogShortcut.key}
+                      {dialogShortcut.modifiers.map(mod => getModifierDisplayName(mod)).join(' + ')} +{' '}
+                      {dialogShortcut.key}
                     </div>
                   </div>
                 )}
@@ -204,7 +192,7 @@ const Options = () => {
                     <fieldset>
                       <legend className="mb-2 block text-sm font-medium">Modifiers</legend>
                       <div className="flex flex-wrap gap-4">
-                        {['ctrlKey', 'shiftKey', 'altKey', 'metaKey'].map(modifier => (
+                        {ALL_MODIFIER_KEYS.map(modifier => (
                           <label key={modifier} className="flex items-center">
                             <Checkbox
                               checked={sidePanelShortcut.modifiers.includes(modifier)}
@@ -213,12 +201,7 @@ const Options = () => {
                               }
                               className="mr-1"
                             />
-                            <span className="text-sm">
-                              {modifier === 'ctrlKey' && 'Ctrl'}
-                              {modifier === 'shiftKey' && 'Shift'}
-                              {modifier === 'altKey' && 'Alt'}
-                              {modifier === 'metaKey' && 'Meta/Cmd'}
-                            </span>
+                            <span className="text-sm">{getModifierDisplayName(modifier)}</span>
                           </label>
                         ))}
                       </div>
@@ -238,20 +221,8 @@ const Options = () => {
                     </div>
                     <div className={cn('rounded p-3 text-sm', isLight ? 'bg-gray-100' : 'bg-gray-600')}>
                       <strong>Current shortcut: </strong>
-                      {sidePanelShortcut.modifiers
-                        .map(mod => {
-                          const displayName =
-                            mod === 'ctrlKey'
-                              ? 'Ctrl'
-                              : mod === 'shiftKey'
-                                ? 'Shift'
-                                : mod === 'altKey'
-                                  ? 'Alt'
-                                  : 'Meta';
-                          return displayName;
-                        })
-                        .join(' + ')}{' '}
-                      + {sidePanelShortcut.key}
+                      {sidePanelShortcut.modifiers.map(mod => getModifierDisplayName(mod)).join(' + ')} +{' '}
+                      {sidePanelShortcut.key}
                     </div>
                   </div>
                 )}

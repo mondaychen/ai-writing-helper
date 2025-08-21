@@ -1,7 +1,7 @@
 /* oxlint-disable jsx-a11y/click-events-have-key-events */
 /* oxlint-disable jsx-a11y/no-noninteractive-element-interactions */
 // import { t } from '@extension/i18n';
-import { useStorage, IFRAME_MESSAGE_EVENT_NAME, IFRAME_MESSAGE_TYPE } from '@extension/shared';
+import { useStorage, IFRAME_MESSAGE_EVENT_NAME, IFRAME_MESSAGE_TYPE, createShortcutMatcher } from '@extension/shared';
 import { keyboardShortcutStorage } from '@extension/storage';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { EditorUI } from '@extension/ui/app/EditorUI';
@@ -110,70 +110,10 @@ export default function App() {
   // Update shortcut matchers when settings change
   useEffect(() => {
     // Create matcher for dialog shortcut
-    if (shortcutSettings.dialog.enabled && shortcutSettings.dialog.modifiers.length > 0) {
-      const modifierChecks: ((e: KeyboardEvent) => boolean)[] = [];
-      const targetKey = shortcutSettings.dialog.key.toUpperCase();
-
-      for (const modifier of shortcutSettings.dialog.modifiers) {
-        switch (modifier) {
-          case 'ctrlKey':
-            modifierChecks.push((e: KeyboardEvent) => e.ctrlKey);
-            break;
-          case 'shiftKey':
-            modifierChecks.push((e: KeyboardEvent) => e.shiftKey);
-            break;
-          case 'altKey':
-            modifierChecks.push((e: KeyboardEvent) => e.altKey);
-            break;
-          case 'metaKey':
-            modifierChecks.push((e: KeyboardEvent) => e.metaKey);
-            break;
-        }
-      }
-
-      dialogMatcher.current = (e: KeyboardEvent) => {
-        if (e.key.toUpperCase() !== targetKey) return false;
-        for (const check of modifierChecks) {
-          if (!check(e)) return false;
-        }
-        return true;
-      };
-    } else {
-      dialogMatcher.current = null;
-    }
+    dialogMatcher.current = createShortcutMatcher(shortcutSettings.dialog);
 
     // Create matcher for side panel shortcut
-    if (shortcutSettings.sidePanel.enabled && shortcutSettings.sidePanel.modifiers.length > 0) {
-      const modifierChecks: ((e: KeyboardEvent) => boolean)[] = [];
-      const targetKey = shortcutSettings.sidePanel.key.toUpperCase();
-
-      for (const modifier of shortcutSettings.sidePanel.modifiers) {
-        switch (modifier) {
-          case 'ctrlKey':
-            modifierChecks.push((e: KeyboardEvent) => e.ctrlKey);
-            break;
-          case 'shiftKey':
-            modifierChecks.push((e: KeyboardEvent) => e.shiftKey);
-            break;
-          case 'altKey':
-            modifierChecks.push((e: KeyboardEvent) => e.altKey);
-            break;
-          case 'metaKey':
-            modifierChecks.push((e: KeyboardEvent) => e.metaKey);
-            break;
-        }
-      }
-
-      sidePanelMatcher.current = (e: KeyboardEvent) => {
-        if (e.key.toUpperCase() !== targetKey) return false;
-        for (const check of modifierChecks) {
-          if (!check(e)) return false;
-        }
-        return true;
-      };
-    } else {
-      sidePanelMatcher.current = null;
-    }
+    sidePanelMatcher.current = createShortcutMatcher(shortcutSettings.sidePanel);
   }, [shortcutSettings]);
 
   // shortcut listener -- no-op if no shortcut is enabled

@@ -1,6 +1,13 @@
 import '@src/Popup.css';
 import { t } from '@extension/i18n';
-import { PROJECT_URL_OBJECT, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
+import {
+  PROJECT_URL_OBJECT,
+  useStorage,
+  withErrorBoundary,
+  withSuspense,
+  formatShortcut,
+  hasEnabledShortcuts,
+} from '@extension/shared';
 import { exampleThemeStorage, aiSettingsStorage, keyboardShortcutStorage } from '@extension/storage';
 import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from '@extension/ui';
 
@@ -28,31 +35,7 @@ const Popup = () => {
   const hasApiKey = aiSettings?.apiKey && aiSettings.apiKey.trim() !== '';
 
   // Check if any shortcuts are enabled
-  const hasEnabledShortcuts = shortcutSettings?.dialog?.enabled || shortcutSettings?.sidePanel?.enabled;
-
-  // Format shortcut display
-  const formatShortcut = (shortcut: { enabled: boolean; modifiers: string[]; key: string } | undefined) => {
-    if (!shortcut?.enabled) return null;
-
-    const modifiers = shortcut.modifiers
-      .map((mod: string) => {
-        switch (mod) {
-          case 'ctrlKey':
-            return 'Ctrl';
-          case 'shiftKey':
-            return 'Shift';
-          case 'altKey':
-            return 'Alt';
-          case 'metaKey':
-            return 'Cmd';
-          default:
-            return mod;
-        }
-      })
-      .join(' + ');
-
-    return `${modifiers} + ${shortcut.key}`;
-  };
+  const hasEnabledShortcutsValue = hasEnabledShortcuts(shortcutSettings || {});
 
   const dialogShortcut = formatShortcut(shortcutSettings?.dialog);
   const sidePanelShortcut = formatShortcut(shortcutSettings?.sidePanel);
@@ -90,7 +73,7 @@ const Popup = () => {
               Set API Key
             </button>
           </div>
-        ) : hasEnabledShortcuts ? (
+        ) : hasEnabledShortcutsValue ? (
           <div
             className={cn(
               'rounded-lg p-4',
