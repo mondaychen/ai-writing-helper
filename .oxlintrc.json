@@ -128,7 +128,13 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn"
   },
-  "ignorePatterns": ["**/build/**", "**/dist/**", "**/node_modules/**", "chrome-extension/manifest.js"],
+  "ignorePatterns": [
+    "**/build/**",
+    "**/dist/**",
+    "**/node_modules/**",
+    "chrome-extension/manifest.js",
+    "**/packages/ui/lib/components/ui/**"
+  ],
   "overrides": [
     {
       "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
