@@ -104,30 +104,57 @@ export default function App() {
     }
   }, [uiModeSettings.mode]);
 
+  // Store pre-computed shortcut matcher for maximum performance
+  const shortcutMatcher = useRef<((e: KeyboardEvent) => boolean) | null>(null);
+
+  // Update shortcut matcher when settings change
+  useEffect(() => {
+    if (shortcutSettings.modifiers.length === 0) {
+      shortcutMatcher.current = null; // No shortcuts configured
+      return;
+    }
+
+    // Pre-compute modifier checks and key comparison (runs once, not on every keypress)
+    const modifierChecks: ((e: KeyboardEvent) => boolean)[] = [];
+    const targetKey = shortcutSettings.key.toUpperCase(); // Cache uppercase key
+
+    for (const modifier of shortcutSettings.modifiers) {
+      switch (modifier) {
+        case 'ctrlKey':
+          modifierChecks.push((e: KeyboardEvent) => e.ctrlKey); // Pre-compile modifier check
+          break;
+        case 'shiftKey':
+          modifierChecks.push((e: KeyboardEvent) => e.shiftKey);
+          break;
+        case 'altKey':
+          modifierChecks.push((e: KeyboardEvent) => e.altKey);
+          break;
+        case 'metaKey':
+          modifierChecks.push((e: KeyboardEvent) => e.metaKey);
+          break;
+      }
+    }
+
+    // Create optimized matcher function (replaces expensive array.every() + string ops)
+    shortcutMatcher.current = (e: KeyboardEvent) => {
+      // Fast path: check key first (most likely to fail, avoids modifier checks)
+      if (e.key.toUpperCase() !== targetKey) return false;
+
+      // Check modifiers only if key matches (short-circuit evaluation)
+      for (const check of modifierChecks) {
+        if (!check(e)) return false;
+      }
+      return true;
+    };
+  }, [shortcutSettings]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // safety check: do nothing if user did not set any modifier
-      if (shortcutSettings.modifiers.length === 0) {
-        return;
-      }
+      // Ultra-fast early return if no matcher
+      if (!shortcutMatcher.current) return;
 
-      const isMatch =
-        shortcutSettings.modifiers.every((modifier: string) => {
-          switch (modifier) {
-            case 'ctrlKey':
-              return e.ctrlKey;
-            case 'shiftKey':
-              return e.shiftKey;
-            case 'altKey':
-              return e.altKey;
-            case 'metaKey':
-              return e.metaKey;
-            default:
-              return false;
-          }
-        }) && e.key.toUpperCase() === shortcutSettings.key.toUpperCase();
-
-      if (isMatch) {
+      // Use pre-computed matcher
+      if (shortcutMatcher.current(e)) {
         e.preventDefault();
         openEditor();
       }
@@ -149,7 +176,7 @@ export default function App() {
       document.removeEventListener('keydown', handleKeyDown);
       chrome.runtime.onMessage.removeListener(handleMessage);
     };
-  }, [shortcutSettings, handleApply, openEditor]);
+  }, [handleApply, openEditor]);
 
   useEffect(() => {
     if (isDialogOpen && dialogRef.current) {

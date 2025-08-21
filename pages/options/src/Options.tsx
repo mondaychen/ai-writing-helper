@@ -50,6 +50,14 @@ const Options = () => {
   };
 
   const handleSaveShortcut = async () => {
+    // Prevent saving shortcuts without modifiers to avoid conflicts with normal typing
+    if (shortcutData.modifiers.length === 0) {
+      toast.error(
+        'Please select at least one modifier (Ctrl, Shift, Alt, or Meta). Shortcuts without modifiers will conflict with everyday typing.',
+      );
+      return;
+    }
+
     await keyboardShortcutStorage.set(shortcutData);
     toast.success('Keyboard shortcut saved successfully!');
   };
