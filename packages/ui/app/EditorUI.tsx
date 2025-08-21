@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useStorage, useAiInstance } from '@extension/shared';
-import { aiSettingsStorage } from '@extension/storage';
+import { aiSettingsStorage, styleInstructionStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
 import { Textarea } from '@/lib/components/ui/textarea';
 import { Label } from '@/lib/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
 
 import { X, Copy, RotateCcw, Check } from 'lucide-react';
 
@@ -33,16 +34,20 @@ export const EditorUI = ({
   const [summary, setSummary] = useState('');
   const [prompt, setPrompt] = useState('');
   const [isRewriting, setIsRewriting] = useState(false);
+  const [selectedInstructionIndex, setSelectedInstructionIndex] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const aiSettings = useStorage(aiSettingsStorage);
+  const styleInstructions = useStorage(styleInstructionStorage);
+  console.log(styleInstructions);
   const aiInstance = useAiInstance(aiSettings.provider, aiSettings.baseUrl, aiSettings.apiKey);
 
   useEffect(() => {
-    if (aiSettings.defaultPrompt && !prompt) {
-      setPrompt(aiSettings.defaultPrompt);
+    if (!prompt && styleInstructions?.items?.length && selectedInstructionIndex === null) {
+      setSelectedInstructionIndex(0);
+      setPrompt(styleInstructions.items[0].description);
     }
-  }, [aiSettings.defaultPrompt, prompt]);
+  }, [styleInstructions, prompt, selectedInstructionIndex]);
 
   useEffect(() => {
     if (initialContent !== undefined) {
@@ -120,7 +125,35 @@ export const EditorUI = ({
           )}
         </div>
         <div className="flex w-full flex-col gap-2 md:w-80">
-          <Label htmlFor="prompt-textarea">AI Prompt</Label>
+          <Label htmlFor="prompt-textarea">Rewrite Style Instruction</Label>
+          {styleInstructions?.items?.length > 0 && (
+            <div className="flex flex-row items-center gap-2">
+              <Label htmlFor="style-instruction-select" className="min-w-16 text-xs">
+                Use Style:
+              </Label>
+              <Select
+                onValueChange={value => {
+                  const index = Number(value);
+                  setSelectedInstructionIndex(index);
+                  const selected = styleInstructions.items[index];
+                  if (selected) {
+                    setPrompt(selected.description);
+                  }
+                }}
+                value={selectedInstructionIndex !== null ? String(selectedInstructionIndex) : undefined}>
+                <SelectTrigger id="style-instruction-select">
+                  <SelectValue placeholder="Choose an instruction" />
+                </SelectTrigger>
+                <SelectContent>
+                  {styleInstructions.items.map((item, index) => (
+                    <SelectItem key={`${item.title}-${index}`} value={String(index)}>
+                      {item.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <Textarea
             id="prompt-textarea"
             value={prompt}

@@ -23,6 +23,7 @@ import { Label } from '@/lib/components/ui/label';
 import { Switch } from '@/lib/components/ui/switch';
 
 import { AISetting, type formSchema } from './AISetting';
+import { SortableForm } from './InstructionList';
 
 const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
@@ -118,6 +119,15 @@ const Options = () => {
           {/* AI Settings Section */}
           <section className={cn('rounded-lg p-6', isLight ? 'bg-white shadow-md' : 'bg-gray-950')}>
             <AISetting onSubmit={handleSaveSettings} defaultValues={aiSettings} />
+          </section>
+
+          {/* Style Instructions Section */}
+          <section className={cn('rounded-lg p-6', isLight ? 'bg-white shadow-md' : 'bg-gray-950')}>
+            <h2 className="mb-4 text-xl font-semibold">Style Instructions</h2>
+            <p className="text-muted-foreground mb-4 text-sm">
+              Create your style instructions presets to used in different scenarios.
+            </p>
+            <SortableForm />
           </section>
 
           {/* Keyboard Shortcuts Section */}

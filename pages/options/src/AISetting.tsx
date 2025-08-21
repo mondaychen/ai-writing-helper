@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { AI_PROVIDER, RECOMMENDED_MODEL_BY_PROVIDER } from '@extension/storage';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/lib/components/ui/form';
 import { Input } from '@/lib/components/ui/input';
-import { Textarea } from '@/lib/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
 import { Button } from '@/lib/components/ui/button';
 
@@ -14,7 +13,6 @@ export const formSchema = z.object({
   apiKey: z.string().min(2),
   baseUrl: z.string().optional(),
   modelName: z.string(),
-  defaultPrompt: z.string().optional(),
 });
 
 interface AISettingProps {
@@ -107,19 +105,6 @@ export const AISetting: React.FC<AISettingProps> = ({ defaultValues, onSubmit })
                     Fill Recommended
                   </Button>
                 </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="defaultPrompt"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Default Prompt</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Enter default prompt (e.g., 'Fix grammar and improve clarity')" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
