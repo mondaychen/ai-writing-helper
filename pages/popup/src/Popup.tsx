@@ -6,7 +6,7 @@ import { cn, ErrorDisplay, LoadingSpinner, ToggleButton } from '@extension/ui';
 
 const Popup = () => {
   const { isLight } = useStorage(exampleThemeStorage);
-  const logo = isLight ? 'popup/logo_vertical.svg' : 'popup/logo_vertical_dark.svg';
+  const logo = 'popup/logo.png';
 
   const goGithubSite = () => chrome.tabs.create(PROJECT_URL_OBJECT);
 
@@ -24,31 +24,36 @@ const Popup = () => {
 
   return (
     <div className={cn('App', isLight ? 'bg-slate-50' : 'bg-gray-800')}>
-      <header className={cn('App-header', isLight ? 'text-gray-900' : 'text-gray-100')}>
+      <header
+        className={cn(
+          isLight ? 'text-gray-900' : 'text-gray-100',
+          'flex flex-row items-center justify-center space-x-2',
+        )}>
         <button onClick={goGithubSite}>
           <img src={chrome.runtime.getURL(logo)} className="App-logo" alt="logo" />
         </button>
-        <p className="mb-4 text-center">AI Writing Helper</p>
-        <div className="flex flex-col space-y-3">
-          <button
-            className={cn(
-              'rounded px-4 py-2 font-medium shadow hover:scale-105',
-              isLight ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600',
-            )}
-            onClick={openOptionsPage}>
-            Open Settings
-          </button>
-          <button
-            className={cn(
-              'rounded px-4 py-2 font-medium shadow hover:scale-105',
-              isLight ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-white hover:bg-green-600',
-            )}
-            onClick={openSidePanel}>
-            Open Side Panel
-          </button>
-          <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
-        </div>
+        <h1 className="pt-1 text-lg font-bold">AI Writing Helper</h1>
       </header>
+
+      <div className="mt-4 flex flex-col space-y-3">
+        <button
+          className={cn(
+            'rounded px-4 py-2 font-medium shadow hover:scale-105',
+            isLight ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600',
+          )}
+          onClick={openOptionsPage}>
+          Open Settings
+        </button>
+        <button
+          className={cn(
+            'rounded px-4 py-2 font-medium shadow hover:scale-105',
+            isLight ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-white hover:bg-green-600',
+          )}
+          onClick={openSidePanel}>
+          Open Side Panel
+        </button>
+        <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
+      </div>
     </div>
   );
 };
