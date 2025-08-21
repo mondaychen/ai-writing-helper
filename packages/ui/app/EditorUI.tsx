@@ -4,7 +4,7 @@ import { aiSettingsStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
 import { Textarea } from '@/lib/components/ui/textarea';
 import { Label } from '@/lib/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/lib/components/ui/card';
+
 import { X, Copy, RotateCcw, Check } from 'lucide-react';
 
 import { rewriteContent as rewriteContentImpl } from './rewrite-content.js';
@@ -30,7 +30,7 @@ export const EditorUI = ({
 }: EditorUIProps) => {
   const [editorContent, setEditorContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
-  const [reason, setReason] = useState('');
+  const [summary, setSummary] = useState('');
   const [prompt, setPrompt] = useState('');
   const [isRewriting, setIsRewriting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -66,6 +66,7 @@ export const EditorUI = ({
 
   const resetChanges = () => {
     setEditorContent(originalContent);
+    setSummary('');
   };
 
   const rewriteContent = async () => {
@@ -78,7 +79,7 @@ export const EditorUI = ({
     try {
       const rewrittenContent = await rewriteContentImpl(aiInstance, editorContent, prompt);
       setEditorContent(rewrittenContent.rewrittenContent);
-      setReason(rewrittenContent.reason);
+      setSummary(rewrittenContent.summary);
     } catch (error) {
       console.error('Error rewriting content:', error);
       alert(`Error rewriting content:\n${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -111,6 +112,12 @@ export const EditorUI = ({
             className="h-64 resize-none lg:h-full"
             placeholder="Type your content here..."
           />
+          {summary && (
+            <details className="bg-card rounded-lg border p-4">
+              <summary className="text-card-foreground cursor-pointer font-semibold">What's changed</summary>
+              <div className="text-muted-foreground mt-2 text-sm">{summary}</div>
+            </details>
+          )}
         </div>
         <div className="flex w-full flex-col gap-2 md:w-80">
           <Label htmlFor="prompt-textarea">AI Prompt</Label>
@@ -128,16 +135,6 @@ export const EditorUI = ({
             {isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
           </Button>
         </div>
-        {reason && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">AI Response</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-700">{reason}</p>
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       <div className="flex justify-end gap-2">
