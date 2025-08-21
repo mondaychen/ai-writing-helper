@@ -177,7 +177,9 @@ const EditItemFormDialog = ({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="submit">{actionText}</Button>
+              <Button type="submit" disabled={!form.formState.isDirty}>
+                {actionText}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
@@ -211,7 +213,14 @@ export const SortableForm = () => {
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     await styleInstructionStorage.set({ items: data.items });
     toast.success('Style instructions saved');
+    // Reset to saved values so Save button becomes disabled
+    form.reset(data);
   };
+
+  // Keep form synced with stored values and clear dirty state when storage changes
+  React.useEffect(() => {
+    form.reset({ items: stored.items ?? [] });
+  }, [stored.items, form]);
 
   return (
     <Form {...form}>
@@ -288,7 +297,12 @@ export const SortableForm = () => {
               </Button>
             </EditItemFormDialogTrigger>
           </EditItemFormDialog>
-          <Button type="submit">Save</Button>
+          <div className="flex items-center gap-2">
+            {form.formState.isDirty && <p className="text-xs text-gray-500">Don't forget to save your changes!</p>}
+            <Button type="submit" disabled={!form.formState.isDirty}>
+              Save
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

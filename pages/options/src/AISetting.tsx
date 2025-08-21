@@ -17,7 +17,7 @@ export const formSchema = z.object({
 
 interface AISettingProps {
   defaultValues: z.infer<typeof formSchema>;
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onSubmit: (data: z.infer<typeof formSchema>) => Promise<void> | void;
 }
 
 export const AISetting: React.FC<AISettingProps> = ({ defaultValues, onSubmit }) => {
@@ -37,9 +37,22 @@ export const AISetting: React.FC<AISettingProps> = ({ defaultValues, onSubmit })
     }
   };
 
+  // Keep form in sync with incoming defaults and reset dirty state
+  React.useEffect(() => {
+    if (defaultValues) {
+      form.reset(defaultValues);
+    }
+  }, [defaultValues, form]);
+
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    await Promise.resolve(onSubmit(data));
+    // Reset to saved values so Save button becomes disabled again
+    form.reset(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="provider"
@@ -110,7 +123,9 @@ export const AISetting: React.FC<AISettingProps> = ({ defaultValues, onSubmit })
             </FormItem>
           )}
         />
-        <Button type="submit">Save</Button>
+        <Button type="submit" disabled={!form.formState.isDirty}>
+          Save
+        </Button>
       </form>
     </Form>
   );

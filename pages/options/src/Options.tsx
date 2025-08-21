@@ -1,6 +1,6 @@
 import '@src/Options.css';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { z } from 'zod';
 // import { t } from '@extension/i18n';
 import { toast } from 'sonner';
@@ -106,6 +106,16 @@ const Options = () => {
     const setShortcut = shortcutType === 'dialog' ? setDialogShortcut : setSidePanelShortcut;
     setShortcut(prev => ({ ...prev, enabled }));
   };
+
+  const isShortcutsDirty = useMemo(() => {
+    if (!shortcutSettings || typeof shortcutSettings !== 'object') return false;
+    const baseline = shortcutSettings as KeyboardShortcutsType;
+    const current = {
+      dialog: dialogShortcut,
+      sidePanel: sidePanelShortcut,
+    } as KeyboardShortcutsType;
+    return JSON.stringify(current) !== JSON.stringify(baseline);
+  }, [shortcutSettings, dialogShortcut, sidePanelShortcut]);
 
   return (
     <div className={cn('min-h-screen p-8', isLight ? 'bg-slate-50 text-gray-900' : 'dark bg-zinc-900 text-gray-100')}>
@@ -238,7 +248,9 @@ const Options = () => {
                 )}
               </div>
 
-              <Button onClick={handleSaveShortcuts}>Save Shortcuts</Button>
+              <Button onClick={handleSaveShortcuts} disabled={!isShortcutsDirty}>
+                Save Shortcuts
+              </Button>
             </div>
           </section>
 
