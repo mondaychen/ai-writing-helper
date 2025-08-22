@@ -5,8 +5,10 @@ import { useStorage, IFRAME_MESSAGE_EVENT_NAME, IFRAME_MESSAGE_TYPE, createShort
 import { keyboardShortcutStorage } from '@extension/storage';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { EditorUI } from '@extension/ui/app/EditorUI';
+import { withErrorBoundary } from '@extension/shared/lib/hoc/with-error-boundary';
+import { ErrorDisplay } from '@extension/ui/lib/components/error-display/ErrorDisplay';
 
-export default function App() {
+const App = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentContent, setCurrentContent] = useState('');
   const [isContentAppliable, setIsContentAppliable] = useState(false);
@@ -188,4 +190,6 @@ export default function App() {
       </dialog>
     </>
   );
-}
+};
+
+export default withErrorBoundary(App, ErrorDisplay);
