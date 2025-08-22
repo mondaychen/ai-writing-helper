@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { X, Copy, RotateCcw, Check } from 'lucide-react';
 import { useStorage, useAiInstance } from '@extension/shared';
 import { aiSettingsStorage, styleInstructionStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
 import { Textarea } from '@/lib/components/ui/textarea';
 import { Label } from '@/lib/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
-
-import { X, Copy, RotateCcw, Check } from 'lucide-react';
+import { NativeSelect, NativeSelectOption, NativeSelectPlaceholder } from '@/lib/components/ui/native-select';
 
 import { rewriteContent as rewriteContentImpl } from './rewrite-content.js';
 
@@ -131,8 +130,9 @@ export const EditorUI = ({
               <Label htmlFor="style-instruction-select" className="min-w-16 text-xs">
                 Use Style:
               </Label>
-              <Select
-                onValueChange={value => {
+              <NativeSelect
+                onChange={e => {
+                  const value = e.target.value;
                   const index = Number(value);
                   setSelectedInstructionIndex(index);
                   const selected = styleInstructions.items[index];
@@ -141,17 +141,13 @@ export const EditorUI = ({
                   }
                 }}
                 value={selectedInstructionIndex !== null ? String(selectedInstructionIndex) : undefined}>
-                <SelectTrigger id="style-instruction-select">
-                  <SelectValue placeholder="Choose an instruction" />
-                </SelectTrigger>
-                <SelectContent>
-                  {styleInstructions.items.map((item, index) => (
-                    <SelectItem key={`${item.title}-${index}`} value={String(index)}>
-                      {item.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <NativeSelectPlaceholder>Choose an instruction</NativeSelectPlaceholder>
+                {styleInstructions.items.map((item, index) => (
+                  <NativeSelectOption key={`${item.title}-${index}`} value={String(index)}>
+                    {item.title}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
             </div>
           )}
           <Textarea
