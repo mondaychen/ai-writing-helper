@@ -1,12 +1,10 @@
 import '@src/SidePanel.css';
 import { useState, useEffect } from 'react';
-import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
-import { exampleThemeStorage } from '@extension/storage';
+import { withErrorBoundary, withSuspense } from '@extension/shared';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
 import { EditorUI } from '@extension/ui/app/EditorUI';
 
 const SidePanel = () => {
-  const { isLight } = useStorage(exampleThemeStorage);
   const [currentContent, setCurrentContent] = useState('');
   const [isContentAppliable, setIsContentAppliable] = useState(false);
 
@@ -42,7 +40,7 @@ const SidePanel = () => {
       onClose={() => {}}
       initialContent={currentContent}
       onApply={handleApply}
-      className={cn('flex-1 p-4', isLight ? 'text-gray-900' : 'text-gray-100')}
+      className={cn('flex-1 p-4')}
       showCloseButton={false}
       isContentAppliable={isContentAppliable}
     />

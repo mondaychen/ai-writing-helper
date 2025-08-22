@@ -38,7 +38,6 @@ export const EditorUI = ({
 
   const aiSettings = useStorage(aiSettingsStorage);
   const styleInstructions = useStorage(styleInstructionStorage);
-  console.log(styleInstructions);
   const aiInstance = useAiInstance(aiSettings.provider, aiSettings.baseUrl, aiSettings.apiKey);
 
   useEffect(() => {
