@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Copy, RotateCcw, Check } from 'lucide-react';
 import { useStorage, useAiInstance } from '@extension/shared';
-import { aiSettingsStorage, styleInstructionStorage } from '@extension/storage';
+import { aiSettingsStorage, styleInstructionStorage, miscSettingsStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
 import { Textarea } from '@/lib/components/ui/textarea';
 import { Label } from '@/lib/components/ui/label';
@@ -38,6 +38,7 @@ export const EditorUI = ({
 
   const aiSettings = useStorage(aiSettingsStorage);
   const styleInstructions = useStorage(styleInstructionStorage);
+  const miscSettings = useStorage(miscSettingsStorage);
   const aiInstance = useAiInstance(aiSettings.provider, aiSettings.baseUrl, aiSettings.apiKey);
 
   useEffect(() => {
@@ -81,7 +82,12 @@ export const EditorUI = ({
     setIsRewriting(true);
     try {
       const rewrittenContent = await rewriteContentImpl(aiInstance, editorContent, prompt);
-      setEditorContent(rewrittenContent.rewrittenContent);
+      const newContent = rewrittenContent.rewrittenContent;
+      if (miscSettings?.emDashReplacement?.enabled) {
+        setEditorContent(newContent.replace(/—/g, miscSettings.emDashReplacement.replacement));
+      } else {
+        setEditorContent(newContent);
+      }
       setSummary(rewrittenContent.summary);
     } catch (error) {
       console.error('Error rewriting content:', error);

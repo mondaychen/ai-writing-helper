@@ -12,8 +12,13 @@ import {
   ALL_MODIFIER_KEYS,
   getModifierDisplayName,
 } from '@extension/shared';
-import { exampleThemeStorage, aiSettingsStorage, keyboardShortcutStorage } from '@extension/storage';
-import type { KeyboardShortcutType, KeyboardShortcutsType } from '@extension/storage';
+import {
+  exampleThemeStorage,
+  aiSettingsStorage,
+  keyboardShortcutStorage,
+  miscSettingsStorage,
+} from '@extension/storage';
+import type { KeyboardShortcutType, KeyboardShortcutsType, MiscSettingsType } from '@extension/storage';
 import { cn, ErrorDisplay, LoadingSpinner } from '@extension/ui';
 import { Button } from '@/lib/components/ui/button';
 import { Checkbox } from '@/lib/components/ui/checkbox';
@@ -29,6 +34,7 @@ const Options = () => {
   const { isLight } = useStorage(exampleThemeStorage);
   const aiSettings = useStorage(aiSettingsStorage);
   const shortcutSettings = useStorage(keyboardShortcutStorage);
+  const miscSettings = useStorage(miscSettingsStorage);
 
   const [dialogShortcut, setDialogShortcut] = useState<KeyboardShortcutType>({
     modifiers: ['ctrlKey', 'shiftKey'],
@@ -42,6 +48,11 @@ const Options = () => {
     enabled: false,
   });
 
+  const [emDashReplacement, setEmDashReplacement] = useState<MiscSettingsType['emDashReplacement']>({
+    enabled: false,
+    replacement: ' — ',
+  });
+
   useEffect(() => {
     if (shortcutSettings && typeof shortcutSettings === 'object') {
       const settings = shortcutSettings as KeyboardShortcutsType;
@@ -53,6 +64,14 @@ const Options = () => {
       }
     }
   }, [shortcutSettings]);
+
+  useEffect(() => {
+    if (miscSettings && typeof miscSettings === 'object') {
+      if (miscSettings.emDashReplacement) {
+        setEmDashReplacement(miscSettings.emDashReplacement);
+      }
+    }
+  }, [miscSettings]);
 
   const handleSaveSettings = async (data: z.infer<typeof formSchema>) => {
     await aiSettingsStorage.set(data);
@@ -79,6 +98,13 @@ const Options = () => {
       sidePanel: sidePanelShortcut,
     });
     toast.success('Keyboard shortcuts saved successfully!');
+  };
+
+  const handleSaveMiscSettings = async () => {
+    await miscSettingsStorage.set({
+      emDashReplacement,
+    });
+    toast.success('Misc settings saved successfully!');
   };
 
   const handleModifierChange = (shortcutType: 'dialog' | 'sidePanel', modifier: string, checked: boolean) => {
@@ -251,6 +277,44 @@ const Options = () => {
               <Button onClick={handleSaveShortcuts} disabled={!isShortcutsDirty}>
                 Save Shortcuts
               </Button>
+            </div>
+          </section>
+
+          {/* Misc Settings Section */}
+          <section className={cn('rounded-lg p-6', isLight ? 'bg-white shadow-md' : 'bg-gray-950')}>
+            <h2 className="mb-4 text-xl font-semibold">Misc Settings</h2>
+            <div className="space-y-6">
+              {/* Em-dash Replacement */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="em-dash-enabled"
+                    checked={emDashReplacement.enabled}
+                    onCheckedChange={checked => setEmDashReplacement(prev => ({ ...prev, enabled: checked }))}
+                  />
+                  <Label htmlFor="em-dash-enabled" className="text-lg font-medium">
+                    Automatically replace em-dash (—)
+                  </Label>
+                </div>
+                {emDashReplacement.enabled && (
+                  <div className="space-y-4 border-l-4 pl-2">
+                    <div>
+                      <label htmlFor="em-dash-replacement" className="mb-2 block text-sm font-medium">
+                        Replacement text
+                      </label>
+                      <Input
+                        id="em-dash-replacement"
+                        type="text"
+                        value={emDashReplacement.replacement}
+                        onChange={e => setEmDashReplacement(prev => ({ ...prev, replacement: e.target.value }))}
+                        placeholder=" — "
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Button onClick={handleSaveMiscSettings}>Save Misc Settings</Button>
             </div>
           </section>
 
