@@ -6,14 +6,23 @@ A powerful Chrome/Firefox extension that helps you write better with AI assistan
 ![](https://img.shields.io/badge/Typescript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![](https://badges.aleen42.com/src/vitejs.svg)
 ![](https://img.shields.io/badge/Chrome%20Extension-MV3-yellow?style=flat-square&logo=googlechrome)
-![](https://img.shields.io/badge/Firefox-Compatible-orange?style=flat-square&logo=firefox)
 
-## Features
+## Why
 
-- ✨ **AI-Powered Writing Assistance** - Get intelligent suggestions to improve your writing (with LLM of your choice)
-- 📝 **Real-time Enhancement** - Works on any website with text input
-- 🌐 **Cross-browser Support** - Compatible with Chrome and Firefox
-- 🔧 **Flexible UX** - Side panel or dialog mode, with customizable settings
+As a non‑native English speaker, I kept losing flow while translating thoughts into English. Existing assistants added lines and popups I didn’t want, and usually required a subscription. So I built a small, keyboard‑first tool I could summon anywhere.
+
+## What it is
+
+- Keyboard‑invoked, minimal UI
+- BYOK (bring your own API key), no subscription
+- Prompt is user‑editable -- you can set up multiple prompt presets for different scenarios
+- Open‑source, no tracking, no data collection
+
+## How it works
+
+- Press your shortcut (default: `Ctrl+Shift+W`) to open the composer in a dialog.
+- Describe what you want (tone, audience, length).
+- Paste the result where you're writing.
 
 ## Installation
 
