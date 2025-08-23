@@ -38,9 +38,9 @@ export const getModifierDisplayName = (modifier: string): string => {
 export const formatShortcut = (shortcut: KeyboardShortcutType | undefined): string | null => {
   if (!shortcut?.enabled) return null;
 
-  const modifiers = shortcut.modifiers.map(mod => getModifierDisplayName(mod)).join(' + ');
+  const modifiers = shortcut.modifiers.map(mod => getModifierDisplayName(mod)).join('+');
 
-  return `${modifiers} + ${shortcut.key}`;
+  return `${modifiers}+${shortcut.key}`;
 };
 
 /**

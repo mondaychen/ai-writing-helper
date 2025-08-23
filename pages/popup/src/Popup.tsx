@@ -26,7 +26,16 @@ const Popup = () => {
   const openSidePanel = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       if (tabs[0]?.id) {
-        chrome.sidePanel.open({ tabId: tabs[0].id });
+        chrome.sidePanel
+          .open({ tabId: tabs[0].id })
+          .then(() => {
+            // Close the popup after successfully opening the side panel
+            window.close();
+          })
+          .catch(() => {
+            // If opening side panel fails, don't close the popup
+            console.error('Failed to open side panel');
+          });
       }
     });
   };
@@ -85,7 +94,7 @@ const Popup = () => {
             <div className="space-y-1 text-xs">
               {dialogShortcut && (
                 <div className="flex items-center justify-between">
-                  <span>Dialog Editor:</span>
+                  <span>Use Editor on Active Page:</span>
                   <code
                     className={cn(
                       'rounded px-2 py-1 font-mono text-xs',
@@ -97,7 +106,7 @@ const Popup = () => {
               )}
               {sidePanelShortcut && (
                 <div className="flex items-center justify-between">
-                  <span>Side Panel:</span>
+                  <span>Use Editor in Side Panel:</span>
                   <code
                     className={cn(
                       'rounded px-2 py-1 font-mono text-xs',
@@ -132,23 +141,25 @@ const Popup = () => {
           </div>
         )}
 
-        <button
-          className={cn(
-            'rounded px-4 py-2 font-medium shadow',
-            isLight ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600',
-          )}
-          onClick={openOptionsPage}>
-          Open Settings
-        </button>
-        <button
-          className={cn(
-            'rounded px-4 py-2 font-medium shadow',
-            isLight ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-white hover:bg-green-600',
-          )}
-          onClick={openSidePanel}>
-          Open Side Panel
-        </button>
-        <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
+        <div className="mx-auto flex flex-col space-y-2">
+          <button
+            className={cn(
+              'rounded px-4 py-2 font-medium shadow',
+              isLight ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-500 text-white hover:bg-blue-600',
+            )}
+            onClick={openOptionsPage}>
+            Settings
+          </button>
+          <button
+            className={cn(
+              'rounded px-4 py-2 font-medium shadow',
+              isLight ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-green-500 text-white hover:bg-green-600',
+            )}
+            onClick={openSidePanel}>
+            Use Editor in Side Panel
+          </button>
+          <ToggleButton onClick={exampleThemeStorage.toggle}>{t('toggleTheme')}</ToggleButton>
+        </div>
       </div>
     </div>
   );
