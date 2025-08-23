@@ -18,4 +18,7 @@ chrome.runtime.onMessage.addListener((message, sender, _sendResponse) => {
       });
     }
   }
+  if (message.type === 'OPEN_OPTIONS_PAGE') {
+    chrome.runtime.openOptionsPage();
+  }
 });

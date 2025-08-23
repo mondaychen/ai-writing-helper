@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Copy, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Copy, Check, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { useStorage, useAiInstance } from '@extension/shared';
 import { aiSettingsStorage, styleInstructionStorage, miscSettingsStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
@@ -69,6 +69,12 @@ export const EditorUI = ({
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  const openOptionsPage = () => {
+    // use message to open options page
+    // since chrome.runtime.openOptionsPage is not available in content scripts
+    chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS_PAGE' });
   };
 
   const rewriteContent = async () => {
@@ -168,9 +174,14 @@ export const EditorUI = ({
           )}
         </div>
         <div className="flex w-full flex-col gap-2 md:w-80 md:border-l md:pl-4">
-          <Label htmlFor="prompt-textarea" className="mt-1 text-lg">
-            Rewrite Style Instruction
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="prompt-textarea" className="text-lg">
+              Rewrite Style Instruction
+            </Label>
+            <Button onClick={openOptionsPage} variant="ghost" size="icon" className="h-6 w-6" title="Open settings">
+              <Settings className="h-3 w-3" />
+            </Button>
+          </div>
           {styleInstructions?.items?.length > 0 && (
             <div className="flex flex-row items-center gap-2">
               <Label htmlFor="style-instruction-select" className="min-w-16 text-xs">
