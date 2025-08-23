@@ -12,10 +12,25 @@ export interface StyleInstructionStateType {
 
 type StyleInstructionStorageType = BaseStorageType<StyleInstructionStateType>;
 
+const DEFAULT_STYLE_INSTRUCTIONS: Array<StyleInstructionItemType> = [
+  {
+    title: 'Default',
+    description: 'Rewrite my text in clear, natural English while keeping my tone.',
+  },
+  {
+    title: 'Grammar & Spelling',
+    description: 'Correct grammar and spelling without changing my style.',
+  },
+  {
+    title: 'emoji',
+    description: 'Rewrite with emojis only',
+  },
+];
+
 const storage = createStorage<StyleInstructionStateType>(
   'style-instruction-storage-key',
   {
-    items: [],
+    items: DEFAULT_STYLE_INSTRUCTIONS,
   },
   {
     storageEnum: StorageEnum.Local,
