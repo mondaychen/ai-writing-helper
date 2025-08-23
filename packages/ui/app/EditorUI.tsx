@@ -113,7 +113,7 @@ export const EditorUI = ({
   return (
     <div className={`flex h-full flex-col gap-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-gray-900">AI Writing Helper</h2>
+        <h2 className="text-xl font-bold">AI Writing Helper</h2>
         {showCloseButton && (
           <Button onClick={onClose} variant="ghost" size="icon" className="h-8 w-8">
             <X className="h-4 w-4" />
@@ -163,7 +163,7 @@ export const EditorUI = ({
             ref={textareaRef}
             value={editorContent}
             onChange={e => handleContentChange(e.target.value)}
-            className="h-64 resize-none lg:h-full"
+            className="h-64 resize-none text-lg lg:h-full"
             placeholder="Type your content here..."
           />
           {summary && (
@@ -184,8 +184,8 @@ export const EditorUI = ({
           </div>
           {styleInstructions?.items?.length > 0 && (
             <div className="flex flex-row items-center gap-2">
-              <Label htmlFor="style-instruction-select" className="min-w-16 text-xs">
-                Use Style:
+              <Label htmlFor="style-instruction-select" className="min-w-16 text-sm">
+                Choose Style:
               </Label>
               <NativeSelect
                 onChange={e => {
@@ -211,7 +211,7 @@ export const EditorUI = ({
             id="prompt-textarea"
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            className="h-32 resize-none"
+            className="h-32 text-lg"
             placeholder="Enter instructions for AI (e.g., 'Fix grammar', 'Make more professional', 'Summarize')"
           />
           <Button
