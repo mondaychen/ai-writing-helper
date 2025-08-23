@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Copy, RotateCcw, Check } from 'lucide-react';
+import { X, Copy, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStorage, useAiInstance } from '@extension/shared';
 import { aiSettingsStorage, styleInstructionStorage, miscSettingsStorage } from '@extension/storage';
 import { Button } from '@/lib/components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/lib/components/ui/label';
 import { NativeSelect, NativeSelectOption, NativeSelectPlaceholder } from '@/lib/components/ui/native-select';
 
 import { rewriteContent as rewriteContentImpl } from './rewrite-content.js';
+import { useVersionManager } from './use-version-manager';
 
 interface EditorUIProps {
   isOpen: boolean;
@@ -28,13 +29,16 @@ export const EditorUI = ({
   showCloseButton = true,
   isContentAppliable = false,
 }: EditorUIProps) => {
-  const [editorContent, setEditorContent] = useState(initialContent);
-  const [originalContent, setOriginalContent] = useState(initialContent);
-  const [summary, setSummary] = useState('');
+  const versionManager = useVersionManager(initialContent);
   const [prompt, setPrompt] = useState('');
   const [isRewriting, setIsRewriting] = useState(false);
   const [selectedInstructionIndex, setSelectedInstructionIndex] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Get current content and version info from version manager
+  const editorContent = versionManager.getCurrentContent();
+  const currentVersion = versionManager.getCurrentVersion();
+  const summary = currentVersion?.summary || '';
 
   const aiSettings = useStorage(aiSettingsStorage);
   const styleInstructions = useStorage(styleInstructionStorage);
@@ -50,10 +54,9 @@ export const EditorUI = ({
 
   useEffect(() => {
     if (initialContent !== undefined) {
-      setEditorContent(initialContent);
-      setOriginalContent(initialContent);
+      versionManager.resetToInitialContent(initialContent);
     }
-  }, [initialContent]);
+  }, [initialContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyChanges = () => {
     onApply?.(editorContent);
@@ -68,11 +71,6 @@ export const EditorUI = ({
     }
   };
 
-  const resetChanges = () => {
-    setEditorContent(originalContent);
-    setSummary('');
-  };
-
   const rewriteContent = async () => {
     if (!prompt.trim() || !editorContent.trim()) {
       alert('Please enter both content and a prompt for rewriting.');
@@ -82,19 +80,26 @@ export const EditorUI = ({
     setIsRewriting(true);
     try {
       const rewrittenContent = await rewriteContentImpl(aiInstance, editorContent, prompt);
-      const newContent = rewrittenContent.rewrittenContent;
+      let newContent = rewrittenContent.rewrittenContent;
+
+      // Apply em-dash replacement if enabled
       if (miscSettings?.emDashReplacement?.enabled) {
-        setEditorContent(newContent.replace(/—/g, miscSettings.emDashReplacement.replacement));
-      } else {
-        setEditorContent(newContent);
+        newContent = newContent.replace(/—/g, miscSettings.emDashReplacement.replacement);
       }
-      setSummary(rewrittenContent.summary);
+
+      // Add new version to version history
+      versionManager.addNewVersion(newContent, rewrittenContent.summary, true);
     } catch (error) {
       console.error('Error rewriting content:', error);
       alert(`Error rewriting content:\n${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsRewriting(false);
     }
+  };
+
+  // Handle content changes in textarea
+  const handleContentChange = (newContent: string) => {
+    versionManager.updateCurrentVersion(newContent);
   };
 
   if (!isOpen) return null;
@@ -112,12 +117,37 @@ export const EditorUI = ({
 
       <div className="flex flex-1 flex-col gap-4 md:flex-row">
         <div className="flex flex-1 flex-col gap-2">
-          <Label htmlFor="content-textarea">Content</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="content-textarea">Content</Label>
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={versionManager.goToPreviousVersion}
+                disabled={!versionManager.canGoBack || isRewriting}
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                title="Previous version">
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <span className="text-muted-foreground px-1 text-xs">
+                {versionManager.getCurrentVersionNumber()}/{versionManager.getTotalVersions()}
+              </span>
+              <Button
+                onClick={versionManager.goToNextVersion}
+                disabled={!versionManager.canGoForward || isRewriting}
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                title="Next version">
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
           <Textarea
             id="content-textarea"
             ref={textareaRef}
             value={editorContent}
-            onChange={e => setEditorContent(e.target.value)}
+            onChange={e => handleContentChange(e.target.value)}
             className="h-64 resize-none lg:h-full"
             placeholder="Type your content here..."
           />
@@ -182,10 +212,6 @@ export const EditorUI = ({
         <Button onClick={copyToClipboard} variant="outline" size="sm">
           <Copy className="mr-1 h-4 w-4" />
           Copy
-        </Button>
-        <Button onClick={resetChanges} variant="secondary" size="sm">
-          <RotateCcw className="mr-1 h-4 w-4" />
-          Reset
         </Button>
       </div>
     </div>
