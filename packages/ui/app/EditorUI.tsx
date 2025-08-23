@@ -118,30 +118,39 @@ export const EditorUI = ({
       <div className="flex flex-1 flex-col gap-4 md:flex-row">
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="content-textarea">Content</Label>
-            <div className="flex items-center gap-1">
-              <Button
-                onClick={versionManager.goToPreviousVersion}
-                disabled={!versionManager.canGoBack || isRewriting}
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                title="Previous version">
-                <ChevronLeft className="h-3 w-3" />
-              </Button>
-              <span className="text-muted-foreground px-1 text-xs">
-                {versionManager.getCurrentVersionNumber()}/{versionManager.getTotalVersions()}
-              </span>
-              <Button
-                onClick={versionManager.goToNextVersion}
-                disabled={!versionManager.canGoForward || isRewriting}
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                title="Next version">
-                <ChevronRight className="h-3 w-3" />
+            <div className="flex items-center gap-2">
+              <Label htmlFor="content-textarea" className="text-lg">
+                Content
+              </Label>
+              <Button onClick={copyToClipboard} variant="ghost" size="icon" className="h-6 w-6" title="Copy content">
+                <Copy className="h-3 w-3" />
               </Button>
             </div>
+            {versionManager.getTotalVersions() > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  onClick={versionManager.goToPreviousVersion}
+                  disabled={!versionManager.canGoBack || isRewriting}
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  title="Previous version">
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+                <span className="text-muted-foreground px-1 text-xs">
+                  {versionManager.getCurrentVersionNumber()}/{versionManager.getTotalVersions()}
+                </span>
+                <Button
+                  onClick={versionManager.goToNextVersion}
+                  disabled={!versionManager.canGoForward || isRewriting}
+                  variant="outline"
+                  size="icon"
+                  className="h-6 w-6"
+                  title="Next version">
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
           <Textarea
             id="content-textarea"
@@ -158,8 +167,10 @@ export const EditorUI = ({
             </details>
           )}
         </div>
-        <div className="flex w-full flex-col gap-2 md:w-80">
-          <Label htmlFor="prompt-textarea">Rewrite Style Instruction</Label>
+        <div className="flex w-full flex-col gap-2 md:w-80 md:border-l md:pl-4">
+          <Label htmlFor="prompt-textarea" className="mt-1 text-lg">
+            Rewrite Style Instruction
+          </Label>
           {styleInstructions?.items?.length > 0 && (
             <div className="flex flex-row items-center gap-2">
               <Label htmlFor="style-instruction-select" className="min-w-16 text-xs">
@@ -208,11 +219,6 @@ export const EditorUI = ({
             Apply
           </Button>
         )}
-
-        <Button onClick={copyToClipboard} variant="outline" size="sm">
-          <Copy className="mr-1 h-4 w-4" />
-          Copy
-        </Button>
       </div>
     </div>
   );
